@@ -139,6 +139,8 @@ const products = (await getCollection('shop', ({ data }) => !data.draft)).sort((
     color: rgba(215, 224, 232, 0.78);
     font-size: 1rem;
     max-width: 34rem;
+    white-space: pre-line;
+    overflow-wrap: break-word;
   }
 
   .cta-row {

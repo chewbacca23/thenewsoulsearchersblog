@@ -35,6 +35,29 @@ describe('folded shop blurb', () => {
     assert.equal(parsed.data.limit, '50 worldwide');
   });
 
+  it('keeps the rest of a wrapped shop note, not only the first line', () => {
+    const raw = `---
+title: "Stickers are here ;) "
+blurb: There are some crisp stickers here these are made in sweden came to
+  berlin and be with you for a fiver each sticker, they are heavy outdoor
+  stickers and are 6,5 cm by 10 cm tall ;) help yourselves ;)
+photo: /stories/img_6620-2.jpeg
+mailSubject: Shop
+order: 0
+draft: false
+---
+`;
+    const product = productFromMarkdown('stickers-are-here', raw);
+    assert.match(product.blurb, /came to berlin/);
+    assert.match(product.blurb, /6,5 cm by 10 cm/);
+    const html = fillShopInHtml(
+      '<ul class="product-list"><li class="product" data-shop-slug="stickers-are-here"><h2 class="product-title">Old</h2><p class="product-blurb">There are some crisp stickers here these are made in sweden came to</p></li></ul>',
+      [product],
+    );
+    assert.match(html, /came to berlin/);
+    assert.match(html, /help yourselves/);
+  });
+
   it('folds >- paragraphs into one blurb', () => {
     const yaml = parseSimpleYaml('blurb: >-\n  First line\n  still first.\n\n  Second bit.\nphoto: ""\n');
     assert.equal(yaml.blurb, 'First line still first.\n\nSecond bit.');

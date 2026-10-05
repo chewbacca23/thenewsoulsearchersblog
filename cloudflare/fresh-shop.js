@@ -71,7 +71,7 @@ export function renderShopItems(products, cid = '') {
         ? `${open('p', cid)} class="product-limit">${escapeHtml(product.limit)}</p>`
         : '';
       const blurb = product.blurb
-        ? `${open('p', cid)} class="product-blurb">${escapeHtml(product.blurb).replace(/\n\n/g, '<br /><br />')}</p>`
+        ? `${open('p', cid)} class="product-blurb">${escapeHtml(product.blurb).replace(/\n/g, '<br />')}</p>`
         : '';
       return `${open('li', cid)} class="product" data-shop-slug="${escapeHtml(product.slug)}">
                   ${open('img', cid)}
@@ -162,7 +162,7 @@ export function fillShopInHtml(html, products) {
 
 function paintProductLi(source, liRe, product) {
   const blurb = product.blurb
-    ? escapeHtml(product.blurb).replace(/\n\n/g, '<br /><br />')
+    ? escapeHtml(product.blurb).replace(/\n/g, '<br />')
     : '';
   return source.replace(liRe, (_, open, inner, close) => {
     inner = inner.replace(

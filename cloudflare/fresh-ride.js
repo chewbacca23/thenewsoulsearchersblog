@@ -129,7 +129,36 @@ export function parseSimpleYaml(yaml) {
     if (rest === '[]') data[key] = [];
     else if (rest === 'true' || rest === 'false') data[key] = rest === 'true';
     else if (/^-?\d+$/.test(rest)) data[key] = Number(rest);
-    else data[key] = unquote(rest);
+    else {
+      const parts = [unquote(rest)];
+      let j = i + 1;
+      while (j < lines.length) {
+        if (lines[j].trim() === '') {
+          let k = j + 1;
+          while (k < lines.length && lines[k].trim() === '') k += 1;
+          if (k < lines.length && /^ +\S/.test(lines[k])) {
+            parts.push('\n');
+            j = k;
+            continue;
+          }
+          break;
+        }
+        if (/^ +\S/.test(lines[j])) {
+          parts.push(lines[j].trim());
+          j += 1;
+          continue;
+        }
+        break;
+      }
+      let text = '';
+      for (const part of parts) {
+        if (part === '\n') text += '\n\n';
+        else text += (text && !text.endsWith('\n') ? ' ' : '') + part;
+      }
+      data[key] = text.replace(/[ \t]+/g, ' ').replace(/ *\n\n */g, '\n\n').trim();
+      i = j;
+      continue;
+    }
     i += 1;
   }
   return data;
