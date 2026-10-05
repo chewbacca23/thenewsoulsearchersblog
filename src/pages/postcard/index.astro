@@ -1,68 +1,153 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import RidePostcard from '../../components/RidePostcard.astro';
 import { existingMedia, galleryMedia } from '../../lib/media';
 import { newestFirst } from '../../lib/newest';
-import { rideWords } from '../../lib/postcard';
+import { site } from '../../site.config';
 
 const stories = await getCollection('stories', ({ data }) => !data.draft);
 const weeks = await getCollection('week', ({ data }) => !data.draft);
 
-const rides = newestFirst(
+const cards = newestFirst(
   [
-    ...stories.map((story) => {
-      const ownLine =
-        story.data.description && story.data.description !== story.data.title
-          ? story.data.description
-          : '';
-      return {
-        id: story.id,
-        date: story.data.pubDate,
-        title: story.data.headline,
-        words: rideWords([ownLine, story.body || ''].filter(Boolean).join('\n\n')),
-        photos: galleryMedia(story.data.cover, story.data.gallery),
-        readHref: `/stories/${story.id}`,
-      };
-    }),
+    ...stories.map((story) => ({
+      id: story.id,
+      date: story.data.pubDate,
+      title: story.data.headline,
+      cover: galleryMedia(story.data.cover, story.data.gallery)[0] || '',
+    })),
     ...weeks.map((entry) => ({
       id: entry.id,
       date: entry.data.pubDate,
       title: entry.data.title,
-      words: rideWords(entry.data.note),
-      photos: existingMedia(entry.data.photos),
-      readHref: '/week',
+      cover: existingMedia(entry.data.photos)[0] || '',
     })),
   ],
-  (ride) => ride.date,
+  (card) => card.date,
 );
-
-const ride = rides[0];
-const blurb = ride ? (ride.words || ride.title).replace(/\s+/g, ' ').trim() : '';
 ---
 
-{
-  ride ? (
-    <BaseLayout title={`${ride.title} — postcard`} description={blurb} ogType="article">
-      <section class="section">
-        <div class="site-shell">
-          <RidePostcard
-            title={ride.title}
-            words={ride.words}
-            photos={ride.photos}
-            readHref={ride.readHref}
-            slug={ride.id}
-          />
-        </div>
-      </section>
-    </BaseLayout>
-  ) : (
-    <BaseLayout title="Postcard">
-      <section class="section">
-        <div class="site-shell">
-          <p>No ride to send just yet.</p>
-        </div>
-      </section>
-    </BaseLayout>
-  )
-}
+<BaseLayout
+  title="Postcards"
+  description="A postcard from each Soul Searchers ride. The crest is on every picture. Send one to someone who was not there."
+>
+  <section class="section">
+    <div class="site-shell">
+      <p class="eyebrow">Postcards</p>
+      <h1 class="section-title">From the ride</h1>
+      <p class="section-lead">
+        One postcard for each ride. A few words, up to twenty pictures, and the crest on every one.
+        Send it to someone who was not there.
+      </p>
+
+      {
+        cards.length === 0 ? (
+          <p>No postcard to send just yet.</p>
+        ) : (
+          <div class="grid">
+            {cards.map((card) => (
+              <a class="tile" href={`/postcard/${card.id}`}>
+                <span class="frame">
+                  {card.cover ? (
+                    <img
+                      src={card.cover}
+                      alt=""
+                      width="800"
+                      height="1000"
+                      loading="lazy"
+                      decoding="async"
+                      sizes="(max-width: 640px) 92vw, 400px"
+                    />
+                  ) : (
+                    <span class="awaiting">
+                      <img src={site.logo} alt="" width="56" height="71" loading="lazy" />
+                      <span>Crest only</span>
+                    </span>
+                  )}
+                </span>
+                <h2>{card.title}</h2>
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .grid {
+    display: grid;
+    gap: 1.75rem 1.25rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 700px) {
+    .grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .grid {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+  }
+
+  .tile {
+    display: grid;
+    gap: 0.85rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .frame {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    background: linear-gradient(150deg, #f2c14e 0%, #ff6b3d 46%, #ff4f8b 100%);
+    padding: 0.45rem;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  }
+
+  .frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .tile:hover .frame img {
+    transform: scale(1.04);
+  }
+
+  .awaiting {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    height: 100%;
+    background: #f6efe2;
+  }
+
+  .awaiting img {
+    width: 3.5rem;
+    height: auto;
+    transition: none;
+  }
+
+  .awaiting span {
+    color: #8a5a12;
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+</style>

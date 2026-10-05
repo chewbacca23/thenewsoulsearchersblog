@@ -9,6 +9,7 @@ const instagram = instagramBind(settings);
 const links = [
   { href: '/', label: 'Home' },
   { href: '/stories', label: 'Rides' },
+  { href: '/postcard', label: 'Postcards' },
   { href: '/week', label: 'This week' },
   { href: '/stores', label: 'Stores' },
   { href: '/friends', label: 'Friends' },
@@ -31,8 +32,19 @@ const links = [
         links.map((link) => (
           <a
             href={link.href}
-            class:list={['nav-link', { active: pathname === link.href }]}
-            aria-current={pathname === link.href ? 'page' : undefined}
+            class:list={[
+              'nav-link',
+              {
+                active:
+                  pathname === link.href ||
+                  (link.href === '/postcard' && pathname.startsWith('/postcard/')),
+              },
+            ]}
+            aria-current={
+              pathname === link.href || (link.href === '/postcard' && pathname.startsWith('/postcard/'))
+                ? 'page'
+                : undefined
+            }
           >
             {link.label}
           </a>

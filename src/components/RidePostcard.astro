@@ -22,29 +22,41 @@ const countLabel =
     : shown.length === 1
       ? 'One picture from the ride'
       : `${shown.length} pictures from the ride`;
+
+/** Die-cut windows. The photo is clipped to the path, so the gradient shows in the bites. */
+const cuts = [
+  'polygon(4% 9%, 12% 2%, 22% 8%, 33% 1%, 44% 8%, 55% 1%, 66% 8%, 77% 2%, 88% 8%, 97% 3%, 99% 14%, 93% 22%, 99% 32%, 93% 41%, 84% 47%, 76% 54%, 86% 61%, 99% 68%, 94% 78%, 99% 89%, 92% 97%, 80% 91%, 68% 99%, 56% 92%, 44% 99%, 32% 92%, 20% 99%, 8% 93%, 2% 82%, 8% 72%, 1% 60%, 8% 50%, 1% 38%, 7% 26%, 2% 16%)',
+  'polygon(8% 4%, 20% 1%, 32% 7%, 44% 1%, 56% 7%, 68% 1%, 80% 7%, 93% 2%, 98% 12%, 93% 22%, 99% 34%, 94% 46%, 99% 58%, 94% 70%, 99% 82%, 95% 94%, 84% 98%, 72% 92%, 60% 99%, 48% 93%, 36% 99%, 24% 93%, 12% 99%, 3% 90%, 1% 78%, 7% 70%, 1% 60%, 14% 54%, 22% 47%, 12% 40%, 1% 32%, 6% 22%, 1% 12%)',
+  'polygon(6% 14%, 2% 8%, 10% 2%, 18% 10%, 24% 3%, 34% 11%, 42% 2%, 52% 10%, 60% 3%, 70% 11%, 78% 2%, 88% 9%, 97% 3%, 99% 16%, 94% 26%, 99% 38%, 94% 50%, 99% 62%, 94% 74%, 99% 86%, 94% 96%, 82% 91%, 70% 99%, 58% 92%, 46% 99%, 34% 92%, 22% 99%, 10% 93%, 2% 84%, 7% 74%, 1% 62%, 7% 50%, 1% 36%, 8% 24%)',
+];
+const washes = ['wash-a', 'wash-b', 'wash-c'];
 ---
 
 <article class="stack">
   <section class="sheet cover">
-    <img class="crest" src={site.logo} alt="The Soul Searchers crest" width="72" height="92" />
-    <p class="eyebrow">A happy postcard</p>
-    <h1>{title}</h1>
-    <p class="count">{countLabel}. The crest is on every page.</p>
-    {
-      paragraphs.map((paragraph) => (
-        <p class="words">{paragraph}</p>
-      ))
-    }
-    <p class="actions">
-      <a class="send" href={mailto}>Send this ride</a>
-      {readHref ? <a class="read" href={readHref}>Read the ride</a> : null}
-    </p>
+    <div class="paper">
+      <img class="crest" src={site.logo} alt="The Soul Searchers crest" width="72" height="92" />
+      <p class="eyebrow">A happy postcard</p>
+      <h1>{title}</h1>
+      <p class="count">{countLabel}. The crest is on every page.</p>
+      {
+        paragraphs.map((paragraph) => (
+          <p class="words">{paragraph}</p>
+        ))
+      }
+      <p class="actions">
+        <a class="send" href={mailto}>Send this ride</a>
+        {readHref ? <a class="read" href={readHref}>Read the ride</a> : null}
+      </p>
+    </div>
   </section>
 
   {
     shown.map((src, index) => (
-      <figure class="sheet photo">
-        <img class="shot" src={src} alt="" width="1200" height="900" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+      <figure class:list={['sheet', 'photo', washes[index % washes.length]]}>
+        <div class="window" style={`clip-path: ${cuts[index % cuts.length]}`}>
+          <img class="shot" src={src} alt="" width="1200" height="1500" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+        </div>
         <img class="stamp" src={site.logo} alt="The Soul Searchers crest" width="64" height="82" />
       </figure>
     ))
@@ -54,22 +66,37 @@ const countLabel =
 <style>
   .stack {
     display: grid;
-    gap: 1.35rem;
+    gap: 1.6rem;
     max-width: 40rem;
     margin: 0 auto;
   }
 
   .sheet {
-    background: #f6f1e6;
-    color: #1c2430;
-    border-radius: 1.15rem;
-    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+    color: #24180f;
+    border-radius: 0;
     break-after: page;
     page-break-after: always;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .cover {
-    padding: 1.6rem 1.45rem 1.4rem;
+    background: linear-gradient(145deg, #f2c14e 0%, #ff6b3d 34%, #ff4f8b 62%, #12a8a0 100%);
+    padding: 0.72rem;
+    clip-path: polygon(
+      2% 4%, 8% 1%, 16% 3.5%, 26% 0.5%, 36% 3%, 48% 0.5%, 60% 3.5%, 72% 0.5%, 84% 3%, 94% 1%, 99% 5%,
+      98% 94%, 92% 99%, 80% 96%, 68% 99.5%, 54% 96%, 40% 99.5%, 26% 96%, 12% 99%, 3% 95%, 1% 88%, 2% 8%
+    );
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+  }
+
+  .paper {
+    background: #f7f1e4;
+    padding: 1.45rem 1.3rem 1.3rem;
+    clip-path: polygon(
+      1.5% 3%, 10% 0.5%, 22% 2.5%, 36% 0.4%, 50% 2.4%, 64% 0.4%, 78% 2.6%, 92% 0.6%, 99% 3.5%,
+      99% 96%, 90% 99.4%, 74% 97%, 58% 99.5%, 42% 97%, 24% 99.4%, 8% 97.2%, 1% 95%, 0.6% 8%
+    );
   }
 
   .crest {
@@ -77,14 +104,15 @@ const countLabel =
     height: auto;
     display: block;
     margin-bottom: 0.85rem;
+    border-radius: 0;
   }
 
   .eyebrow {
     margin: 0 0 0.35rem;
-    color: #8a5a12;
+    color: #d4275d;
     font-size: 0.78rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
   }
 
@@ -92,19 +120,20 @@ const countLabel =
     margin: 0 0 0.45rem;
     font-size: clamp(1.8rem, 4vw, 2.6rem);
     line-height: 1.15;
-    color: #1c2430;
+    color: #24180f;
   }
 
   .count {
     margin: 0 0 1rem;
-    color: #5c6570;
+    color: #0e7c78;
     font-size: 0.95rem;
+    font-weight: 650;
   }
 
   .words {
     margin: 0 0 0.85rem;
     max-width: 36rem;
-    color: #243040;
+    color: #24180f;
     font-size: 1.05rem;
     line-height: 1.55;
   }
@@ -119,20 +148,21 @@ const countLabel =
 
   .send {
     display: inline-block;
-    padding: 0.65rem 1.05rem;
-    border-radius: 999px;
-    background: #1c2430;
-    color: #f6f1e6;
+    padding: 0.7rem 1.15rem;
+    border-radius: 0;
+    background: #ff4f8b;
+    color: #fff8ee;
     font-weight: 700;
     text-decoration: none;
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
   }
 
   .send:hover {
-    background: #8a5a12;
+    background: #e23d6e;
   }
 
   .read {
-    color: #8a5a12;
+    color: #0e7c78;
     font-weight: 700;
     text-decoration: none;
   }
@@ -140,26 +170,45 @@ const countLabel =
   .photo {
     position: relative;
     margin: 0;
-    padding: 0.55rem;
+    padding: 0.95rem 0.9rem 1.15rem;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+  }
+
+  .wash-a {
+    background: linear-gradient(150deg, #f2c14e 0%, #ff6b3d 46%, #ff4f8b 100%);
+  }
+
+  .wash-b {
+    background: linear-gradient(200deg, #12a8a0 0%, #f2c14e 58%, #ff6b3d 100%);
+  }
+
+  .wash-c {
+    background: linear-gradient(125deg, #ff4f8b 0%, #ff6b3d 42%, #f6efe2 78%, #12a8a0 100%);
+  }
+
+  .window {
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
   }
 
   .shot {
     display: block;
     width: 100%;
-    height: auto;
-    border-radius: 0.75rem;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
   }
 
   .stamp {
     position: absolute;
-    right: 1rem;
-    bottom: 1rem;
-    width: 3.5rem;
+    right: 0.85rem;
+    bottom: 0.7rem;
+    z-index: 2;
+    width: 3.6rem;
     height: auto;
-    padding: 0.28rem;
-    background: rgba(246, 241, 230, 0.94);
-    border-radius: 50%;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+    border-radius: 0;
+    background: none;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
   }
 
   @media print {
@@ -176,7 +225,6 @@ const countLabel =
 
     .sheet {
       box-shadow: none;
-      border-radius: 0;
     }
   }
 </style>
