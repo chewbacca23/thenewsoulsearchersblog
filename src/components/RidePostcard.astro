@@ -1,0 +1,182 @@
+---
+import { site } from '../site.config';
+import { POSTCARD_PHOTO_MAX, postcardMail, rideWords } from '../lib/postcard';
+
+interface Props {
+  title: string;
+  words: string;
+  photos: string[];
+  readHref?: string;
+  slug: string;
+}
+
+const { title, words, photos, readHref, slug } = Astro.props;
+const shown = photos.slice(0, POSTCARD_PHOTO_MAX);
+const line = rideWords(words);
+const paragraphs = line.split(/\n{2,}/).filter(Boolean);
+const url = new URL(`/postcard/${slug}`, site.url).href;
+const mailto = postcardMail({ title, words: line, url });
+const countLabel =
+  shown.length === 0
+    ? 'A few words from the ride'
+    : shown.length === 1
+      ? 'One picture from the ride'
+      : `${shown.length} pictures from the ride`;
+---
+
+<article class="stack">
+  <section class="sheet cover">
+    <img class="crest" src={site.logo} alt="The Soul Searchers crest" width="72" height="92" />
+    <p class="eyebrow">A happy postcard</p>
+    <h1>{title}</h1>
+    <p class="count">{countLabel}. The crest is on every page.</p>
+    {
+      paragraphs.map((paragraph) => (
+        <p class="words">{paragraph}</p>
+      ))
+    }
+    <p class="actions">
+      <a class="send" href={mailto}>Send this ride</a>
+      {readHref ? <a class="read" href={readHref}>Read the ride</a> : null}
+    </p>
+  </section>
+
+  {
+    shown.map((src, index) => (
+      <figure class="sheet photo">
+        <img class="shot" src={src} alt="" width="1200" height="900" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+        <img class="stamp" src={site.logo} alt="The Soul Searchers crest" width="64" height="82" />
+      </figure>
+    ))
+  }
+</article>
+
+<style>
+  .stack {
+    display: grid;
+    gap: 1.35rem;
+    max-width: 40rem;
+    margin: 0 auto;
+  }
+
+  .sheet {
+    background: #f6f1e6;
+    color: #1c2430;
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .cover {
+    padding: 1.6rem 1.45rem 1.4rem;
+  }
+
+  .crest {
+    width: 3.4rem;
+    height: auto;
+    display: block;
+    margin-bottom: 0.85rem;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.35rem;
+    color: #8a5a12;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0 0 0.45rem;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1.15;
+    color: #1c2430;
+  }
+
+  .count {
+    margin: 0 0 1rem;
+    color: #5c6570;
+    font-size: 0.95rem;
+  }
+
+  .words {
+    margin: 0 0 0.85rem;
+    max-width: 36rem;
+    color: #243040;
+    font-size: 1.05rem;
+    line-height: 1.55;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem 1.25rem;
+    align-items: center;
+    margin: 1.15rem 0 0;
+  }
+
+  .send {
+    display: inline-block;
+    padding: 0.65rem 1.05rem;
+    border-radius: 999px;
+    background: #1c2430;
+    color: #f6f1e6;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .send:hover {
+    background: #8a5a12;
+  }
+
+  .read {
+    color: #8a5a12;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .photo {
+    position: relative;
+    margin: 0;
+    padding: 0.55rem;
+  }
+
+  .shot {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+  }
+
+  .stamp {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    width: 3.5rem;
+    height: auto;
+    padding: 0.28rem;
+    background: rgba(246, 241, 230, 0.94);
+    border-radius: 50%;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+  }
+
+  @media print {
+    :global(header),
+    :global(footer),
+    :global(.logo-backdrop) {
+      display: none !important;
+    }
+
+    .stack {
+      max-width: none;
+      gap: 0;
+    }
+
+    .sheet {
+      box-shadow: none;
+      border-radius: 0;
+    }
+  }
+</style>

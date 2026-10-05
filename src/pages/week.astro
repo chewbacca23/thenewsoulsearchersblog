@@ -53,6 +53,9 @@ const dateFmt = new Intl.DateTimeFormat('en', {
                     </time>
                     <h2 class="week-title">{entry.data.title}</h2>
                     {entry.data.note ? <p class="week-note">{entry.data.note}</p> : null}
+                    <p class="week-send">
+                      <a href={`/postcard/${entry.id}`}>Send this ride</a>
+                    </p>
                   </div>
                   {gallery.length > 0 ? (
                     <ul class={galleryClass} aria-label={`${entry.data.title} photos`}>
@@ -236,6 +239,16 @@ const dateFmt = new Intl.DateTimeFormat('en', {
     color: rgba(215, 224, 232, 0.75);
     max-width: 36rem;
     white-space: pre-line;
+  }
+
+  .week-send {
+    margin: 0.7rem 0 0;
+  }
+
+  .week-send a {
+    color: var(--amber-hot);
+    font-weight: 700;
+    text-decoration: none;
   }
 
   .week-gallery {

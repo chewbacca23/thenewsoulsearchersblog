@@ -1,0 +1,68 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RidePostcard from '../../components/RidePostcard.astro';
+import { existingMedia, galleryMedia } from '../../lib/media';
+import { newestFirst } from '../../lib/newest';
+import { rideWords } from '../../lib/postcard';
+
+const stories = await getCollection('stories', ({ data }) => !data.draft);
+const weeks = await getCollection('week', ({ data }) => !data.draft);
+
+const rides = newestFirst(
+  [
+    ...stories.map((story) => {
+      const ownLine =
+        story.data.description && story.data.description !== story.data.title
+          ? story.data.description
+          : '';
+      return {
+        id: story.id,
+        date: story.data.pubDate,
+        title: story.data.headline,
+        words: rideWords([ownLine, story.body || ''].filter(Boolean).join('\n\n')),
+        photos: galleryMedia(story.data.cover, story.data.gallery),
+        readHref: `/stories/${story.id}`,
+      };
+    }),
+    ...weeks.map((entry) => ({
+      id: entry.id,
+      date: entry.data.pubDate,
+      title: entry.data.title,
+      words: rideWords(entry.data.note),
+      photos: existingMedia(entry.data.photos),
+      readHref: '/week',
+    })),
+  ],
+  (ride) => ride.date,
+);
+
+const ride = rides[0];
+const blurb = ride ? (ride.words || ride.title).replace(/\s+/g, ' ').trim() : '';
+---
+
+{
+  ride ? (
+    <BaseLayout title={`${ride.title} — postcard`} description={blurb} ogType="article">
+      <section class="section">
+        <div class="site-shell">
+          <RidePostcard
+            title={ride.title}
+            words={ride.words}
+            photos={ride.photos}
+            readHref={ride.readHref}
+            slug={ride.id}
+          />
+        </div>
+      </section>
+    </BaseLayout>
+  ) : (
+    <BaseLayout title="Postcard">
+      <section class="section">
+        <div class="site-shell">
+          <p>No ride to send just yet.</p>
+        </div>
+      </section>
+    </BaseLayout>
+  )
+}

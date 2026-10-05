@@ -37,6 +37,7 @@ const storyHtml = renderMarkdown(plan.wovenBody);
       <div class="prose" set:html={storyHtml} />
 
       <p class="back">
+        <a href={`/postcard/${story.id}`}>Send this ride</a>
         <a href="/stories">← All rides</a>
       </p>
     </div>
@@ -107,6 +108,9 @@ const storyHtml = renderMarkdown(plan.wovenBody);
   }
 
   .back {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.4rem;
     margin-top: 2.75rem;
   }
 

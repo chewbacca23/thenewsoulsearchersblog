@@ -1,0 +1,56 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RidePostcard from '../../components/RidePostcard.astro';
+import { existingMedia, galleryMedia } from '../../lib/media';
+import { rideWords } from '../../lib/postcard';
+
+export async function getStaticPaths() {
+  const stories = await getCollection('stories', ({ data }) => !data.draft);
+  const weeks = await getCollection('week', ({ data }) => !data.draft);
+  const storyIds = new Set(stories.map((story) => story.id));
+
+  const fromStories = stories.map((story) => {
+    const ownLine =
+      story.data.description && story.data.description !== story.data.title
+        ? story.data.description
+        : '';
+    const source = [ownLine, story.body || ''].filter(Boolean).join('\n\n');
+    return {
+      params: { slug: story.id },
+      props: {
+        title: story.data.headline,
+        words: rideWords(source),
+        photos: galleryMedia(story.data.cover, story.data.gallery),
+        readHref: `/stories/${story.id}`,
+      },
+    };
+  });
+
+  const fromWeeks = weeks
+    .filter((entry) => !storyIds.has(entry.id))
+    .map((entry) => ({
+      params: { slug: entry.id },
+      props: {
+        title: entry.data.title,
+        words: rideWords(entry.data.note),
+        photos: existingMedia(entry.data.photos),
+        readHref: '/week',
+      },
+    }));
+
+  return [...fromStories, ...fromWeeks];
+}
+
+const { title, words, photos, readHref } = Astro.props;
+const { slug } = Astro.params;
+const blurb = (words || title).replace(/\s+/g, ' ').trim();
+---
+
+<BaseLayout title={`${title} — postcard`} description={blurb} ogType="article">
+  <section class="section">
+    <div class="site-shell">
+      <RidePostcard title={title} words={words} photos={photos} readHref={readHref} slug={slug} />
+    </div>
+  </section>
+</BaseLayout>
