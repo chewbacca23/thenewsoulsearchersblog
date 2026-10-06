@@ -15,6 +15,7 @@ const cuts = [
   'polygon(6% 14%, 2% 8%, 10% 2%, 18% 10%, 24% 3%, 34% 11%, 42% 2%, 52% 10%, 60% 3%, 70% 11%, 78% 2%, 88% 9%, 97% 3%, 99% 16%, 94% 26%, 99% 38%, 94% 50%, 99% 62%, 94% 74%, 99% 86%, 94% 96%, 82% 91%, 70% 99%, 58% 92%, 46% 99%, 34% 92%, 22% 99%, 10% 93%, 2% 84%, 7% 74%, 1% 62%, 7% 50%, 1% 36%, 8% 24%)',
 ];
 const washes = ['wash-a', 'wash-b', 'wash-c'];
+const treats = ['scribble', 'spray', 'dunk', 'rothko', 'spray', 'dunk'] as const;
 
 const cards = newestFirst(
   [
@@ -73,7 +74,7 @@ const cards = newestFirst(
               <a class="tile" href={`/postcard/${card.id}`}>
                 <span class:list={['frame', washes[index % washes.length]]}>
                   {card.cover ? (
-                    <span class="window" style={`clip-path: ${cuts[index % cuts.length]}`}>
+                    <span class:list={['window', `treat-${treats[index % treats.length]}`]} style={`clip-path: ${cuts[index % cuts.length]}`}>
                       <img
                         class="shot"
                         src={card.cover}
@@ -87,7 +88,7 @@ const cards = newestFirst(
                       />
                       <span class="bloom" aria-hidden="true"></span>
                       <span class="grain" aria-hidden="true"></span>
-                      <PostcardMarks variant={index} />
+                      <PostcardMarks variant={index} treat={treats[index % treats.length]} />
                     </span>
                     <span class="keep" aria-hidden="true"></span>
                   ) : (
@@ -190,6 +191,15 @@ const cards = newestFirst(
     transform: scale(1.06);
     filter: url(#watercolour) saturate(1.45) contrast(1.22) brightness(1.04);
     transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .treat-rothko .shot {
+    opacity: 0.36;
+    filter: url(#watercolour) saturate(0.5) contrast(0.82) brightness(0.62);
+  }
+
+  .treat-rothko .bloom {
+    opacity: 0.12;
   }
 
   .tile:hover .shot {
