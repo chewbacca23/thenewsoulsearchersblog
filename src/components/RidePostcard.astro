@@ -58,9 +58,10 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
     shown.map((src, index) => (
       <figure class:list={['sheet', 'photo', washes[index % washes.length]]}>
         <div class="window" style={`clip-path: ${cuts[index % cuts.length]}`}>
-          <img class="shot" src={src} alt="" width="1200" height="1500" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+          <img class="shot" src={src} alt="" width="1200" height="1500" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" draggable="false" />
         </div>
-        <img class="stamp" src={site.logo} alt="The Soul Searchers crest" width="64" height="82" />
+        <img class="stamp" src={site.logo} alt="" width="64" height="82" draggable="false" />
+        <span class="keep" aria-hidden="true"></span>
       </figure>
     ))
   }
@@ -204,8 +205,17 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
   }
 
   .window {
+    position: relative;
     aspect-ratio: 4 / 5;
     overflow: hidden;
+  }
+
+  .shot,
+  .stamp,
+  .keep {
+    -webkit-user-drag: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .shot {
@@ -214,6 +224,13 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
     height: 100%;
     object-fit: cover;
     border-radius: 0;
+    pointer-events: none;
+  }
+
+  .keep {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
   }
 
   .stamp {
@@ -245,3 +262,14 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
     }
   }
 </style>
+
+<script is:inline>
+  document.addEventListener('contextmenu', function (event) {
+    var node = event.target;
+    if (node && node.closest && node.closest('.photo')) event.preventDefault();
+  });
+  document.addEventListener('dragstart', function (event) {
+    var node = event.target;
+    if (node && node.closest && node.closest('.photo')) event.preventDefault();
+  });
+</script>
