@@ -1,5 +1,6 @@
 ---
 import { site } from '../site.config';
+import PostcardMarks from './PostcardMarks.astro';
 import { POSTCARD_PHOTO_MAX, postcardMail, rideWords } from '../lib/postcard';
 
 interface Props {
@@ -33,18 +34,15 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
 ---
 
 <svg class="paint-defs" aria-hidden="true">
-  <filter id="watercolour" color-interpolation-filters="sRGB" x="-6%" y="-6%" width="112%" height="112%">
-    <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves="2" seed="5" result="bleed" />
-    <feDisplacementMap in="SourceGraphic" in2="bleed" scale="5" xChannelSelector="R" yChannelSelector="G" result="warped" />
-    <feGaussianBlur in="warped" stdDeviation="0.85" result="soft" />
-    <feColorMatrix
-      in="soft"
-      type="matrix"
-      values="1.06 0.05 0.02 0 0.03
-              0.02 1.00 0.03 0 0.02
-              0.02 0.05 0.94 0 0.04
-              0    0    0    1 0"
-    />
+  <filter id="watercolour" color-interpolation-filters="sRGB" x="-8%" y="-8%" width="116%" height="116%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.01 0.015" numOctaves="2" seed="4" result="bleed" />
+    <feDisplacementMap in="SourceGraphic" in2="bleed" scale="6" xChannelSelector="R" yChannelSelector="G" result="warped" />
+    <feGaussianBlur in="warped" stdDeviation="1.05" result="soft" />
+    <feComponentTransfer in="soft" result="paint">
+      <feFuncR type="discrete" tableValues="0.16 0.34 0.52 0.7 0.88" />
+      <feFuncG type="discrete" tableValues="0.14 0.32 0.5 0.68 0.86" />
+      <feFuncB type="discrete" tableValues="0.18 0.36 0.54 0.72 0.9" />
+    </feComponentTransfer>
   </filter>
   <filter id="papergrain" x="0" y="0" width="100%" height="100%">
     <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" stitchTiles="stitch" />
@@ -80,6 +78,7 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
           <img class="shot" src={src} alt="" width="1200" height="1500" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" draggable="false" />
           <span class="bloom" aria-hidden="true"></span>
           <span class="grain" aria-hidden="true"></span>
+          <PostcardMarks variant={index} />
         </div>
         <img class="stamp" src={site.logo} alt="" width="64" height="82" draggable="false" />
         <span class="keep" aria-hidden="true"></span>
@@ -254,7 +253,7 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
     border-radius: 0;
     pointer-events: none;
     transform: scale(1.08);
-    filter: url(#watercolour) saturate(1.12) contrast(0.94) brightness(1.04);
+    filter: url(#watercolour) saturate(1.28) contrast(1.08) brightness(1.03);
   }
 
   .bloom,
@@ -268,14 +267,14 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
   .bloom {
     mix-blend-mode: soft-light;
     background:
-      radial-gradient(ellipse at 16% 20%, rgba(242, 193, 78, 0.72), transparent 56%),
-      radial-gradient(ellipse at 84% 22%, rgba(255, 79, 139, 0.48), transparent 50%),
-      radial-gradient(ellipse at 68% 86%, rgba(18, 168, 160, 0.52), transparent 54%),
-      radial-gradient(ellipse at 28% 78%, rgba(255, 107, 61, 0.42), transparent 48%);
+      radial-gradient(ellipse at 14% 16%, rgba(242, 210, 26, 0.9), transparent 40%),
+      radial-gradient(ellipse at 82% 18%, rgba(226, 59, 47, 0.7), transparent 36%),
+      radial-gradient(ellipse at 72% 86%, rgba(26, 63, 191, 0.62), transparent 42%),
+      radial-gradient(ellipse at 22% 80%, rgba(242, 210, 26, 0.5), transparent 38%);
   }
 
   .grain {
-    opacity: 0.32;
+    opacity: 0.4;
     mix-blend-mode: multiply;
     background: #f3ecdf;
     filter: url(#papergrain);

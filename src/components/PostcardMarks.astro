@@ -1,0 +1,100 @@
+---
+interface Props {
+  variant: number;
+}
+
+const { variant } = Astro.props;
+const which = variant % 3;
+---
+
+<svg class="marks" viewBox="0 0 100 125" aria-hidden="true">
+  {
+    which === 0 && (
+      <g>
+        <polygon class="block yellow" points="5,9 33,5 37,27 7,32" />
+        <polygon class="block red" points="61,86 96,80 99,108 64,114" />
+        <path class="ink heavy" d="M6 40 C 20 32, 38 46, 56 34 S 86 28, 97 41" />
+        <path class="ink" d="M64 16 C 72 8, 88 11, 86 26 C 84 38, 68 36, 62 24" />
+        <path class="ink" d="M14 78 L 32 64 L 27 82 L 18 80 Z" />
+        <path class="ground" d="M10 98 L 20 88 M 15 103 L 27 89 M 21 107 L 33 92" />
+      </g>
+    )
+  }
+  {
+    which === 1 && (
+      <g>
+        <polygon class="block blue" points="4,92 46,86 50,116 2,120" />
+        <polygon class="block yellow" points="72,6 96,10 92,38 68,32" />
+        <path class="ink heavy" d="M18 22 L 46 50 M 46 20 L 16 50" />
+        <path class="ink" d="M10 66 C 28 58, 52 74, 92 61" />
+        <path class="ink" d="M58 42 C 66 28, 90 30, 94 50 C 98 70, 72 76, 56 58" />
+        <path class="ground" d="M62 96 L 88 90" />
+      </g>
+    )
+  }
+  {
+    which === 2 && (
+      <g>
+        <polygon class="block red" points="6,44 30,36 36,78 8,84" />
+        <polygon class="block yellow" points="54,16 94,12 98,32 58,38" />
+        <path class="ink heavy" d="M28 22 C 48 16, 70 28, 92 18" />
+        <path class="ink" d="M14 108 C 36 94, 62 114, 94 100" />
+        <path class="ink" d="M74 58 l 10 -16 l 8 18 l -18 4 z" />
+        <circle class="dot" cx="42" cy="28" r="1.15" />
+        <circle class="dot" cx="46.5" cy="26.2" r="1.05" />
+        <circle class="dot" cx="51" cy="29" r="1.25" />
+      </g>
+    )
+  }
+</svg>
+
+<style>
+  .marks {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .block {
+    opacity: 0.78;
+  }
+
+  .yellow {
+    fill: #f2d21a;
+  }
+
+  .red {
+    fill: #e23b2f;
+  }
+
+  .blue {
+    fill: #1a3fbf;
+  }
+
+  .ink {
+    fill: none;
+    stroke: #14110e;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .heavy {
+    stroke-width: 2.6;
+  }
+
+  .ground {
+    fill: none;
+    stroke: #f7f1e4;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+
+  .dot {
+    fill: #14110e;
+  }
+</style>
