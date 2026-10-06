@@ -16,7 +16,6 @@ const line = rideWords(words);
 const paragraphs = line.split(/\n{2,}/).filter(Boolean);
 const url = new URL(`/postcard/${slug}`, site.url).href;
 const mailto = postcardMail({ title, words: line, url });
-const offerMail = `mailto:${site.email}?subject=${encodeURIComponent('A free postcard')}&body=${encodeURIComponent('I would like a postcard. My email is ')}`;
 const countLabel =
   shown.length === 0
     ? 'A few words from the ride'
@@ -50,8 +49,7 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
         {readHref ? <a class="read" href={readHref}>Read the ride</a> : null}
       </p>
       <p class="offer">
-        You can have them for free if you <a href={offerMail}>tell us your email</a> or
-        <a href="/contact">sign up</a>. Free of charge.
+        <a href="/contact">Sign up for free</a>. No sign-up, no postcard. It is still free of charge.
       </p>
     </div>
   </section>
