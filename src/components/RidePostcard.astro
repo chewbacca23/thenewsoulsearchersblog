@@ -37,11 +37,11 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
   <filter id="watercolour" color-interpolation-filters="sRGB" x="-8%" y="-8%" width="116%" height="116%">
     <feTurbulence type="fractalNoise" baseFrequency="0.01 0.015" numOctaves="2" seed="4" result="bleed" />
     <feDisplacementMap in="SourceGraphic" in2="bleed" scale="6" xChannelSelector="R" yChannelSelector="G" result="warped" />
-    <feGaussianBlur in="warped" stdDeviation="1.05" result="soft" />
+    <feGaussianBlur in="warped" stdDeviation="1.35" result="soft" />
     <feComponentTransfer in="soft" result="paint">
-      <feFuncR type="discrete" tableValues="0.16 0.34 0.52 0.7 0.88" />
-      <feFuncG type="discrete" tableValues="0.14 0.32 0.5 0.68 0.86" />
-      <feFuncB type="discrete" tableValues="0.18 0.36 0.54 0.72 0.9" />
+      <feFuncR type="discrete" tableValues="0.08 0.46 0.9" />
+      <feFuncG type="discrete" tableValues="0.06 0.42 0.88" />
+      <feFuncB type="discrete" tableValues="0.1 0.48 0.92" />
     </feComponentTransfer>
   </filter>
   <filter id="papergrain" x="0" y="0" width="100%" height="100%">
@@ -52,6 +52,7 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
 <article class="stack">
   <section class="sheet cover">
     <div class="paper">
+      <PostcardMarks variant={2} sheet />
       <img class="crest" src={site.logo} alt="The Soul Searchers crest" width="72" height="92" />
       <p class="eyebrow">A happy postcard</p>
       <h1>{title}</h1>
@@ -115,12 +116,24 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
   }
 
   .paper {
+    position: relative;
     background: #f7f1e4;
     padding: 1.45rem 1.3rem 1.3rem;
     clip-path: polygon(
       1.5% 3%, 10% 0.5%, 22% 2.5%, 36% 0.4%, 50% 2.4%, 64% 0.4%, 78% 2.6%, 92% 0.6%, 99% 3.5%,
       99% 96%, 90% 99.4%, 74% 97%, 58% 99.5%, 42% 97%, 24% 99.4%, 8% 97.2%, 1% 95%, 0.6% 8%
     );
+  }
+
+  .crest,
+  .eyebrow,
+  h1,
+  .count,
+  .words,
+  .actions,
+  .offer {
+    position: relative;
+    z-index: 1;
   }
 
   .crest {
@@ -253,7 +266,7 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
     border-radius: 0;
     pointer-events: none;
     transform: scale(1.08);
-    filter: url(#watercolour) saturate(1.28) contrast(1.08) brightness(1.03);
+    filter: url(#watercolour) saturate(1.45) contrast(1.22) brightness(1.04);
   }
 
   .bloom,

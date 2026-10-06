@@ -1,48 +1,77 @@
 ---
 interface Props {
   variant: number;
+  sheet?: boolean;
 }
 
-const { variant } = Astro.props;
+const { variant, sheet = false } = Astro.props;
 const which = variant % 3;
 ---
 
-<svg class="marks" viewBox="0 0 100 125" aria-hidden="true">
+<svg
+  class:list={['marks', { sheet }]}
+  viewBox={sheet ? '0 0 100 100' : '0 0 100 125'}
+  preserveAspectRatio={sheet ? 'none' : 'xMidYMid slice'}
+  aria-hidden="true"
+>
   {
-    which === 0 && (
+    sheet ? (
       <g>
-        <polygon class="block yellow" points="5,9 33,5 37,27 7,32" />
-        <polygon class="block red" points="61,86 96,80 99,108 64,114" />
-        <path class="ink heavy" d="M6 40 C 20 32, 38 46, 56 34 S 86 28, 97 41" />
-        <path class="ink" d="M64 16 C 72 8, 88 11, 86 26 C 84 38, 68 36, 62 24" />
-        <path class="ink" d="M14 78 L 32 64 L 27 82 L 18 80 Z" />
-        <path class="ground" d="M10 98 L 20 88 M 15 103 L 27 89 M 21 107 L 33 92" />
+        <polygon class="block yellow" points="0,0 22,1 18,14 0,16" />
+        <path class="ink heavy" d="M84 1 C 92 0, 99 5, 98 12 C 96 18, 86 16, 84 9" />
+        <path class="ink" d="M90 22 L 99 18 M 93 27 L 100 22" />
+        <path class="crayon" d="M0 38 C 7 34, 5 44, 0 46" />
+        <polygon class="block blue" points="0,88 10,86 12,100 0,100" />
+        <polygon class="block red" points="90,86 100,84 100,100 88,100" />
+        <circle class="dot" cx="96" cy="32" r="1.1" />
+        <circle class="dot" cx="98" cy="36" r="0.8" />
       </g>
-    )
-  }
-  {
-    which === 1 && (
+    ) : which === 0 ? (
       <g>
-        <polygon class="block blue" points="4,92 46,86 50,116 2,120" />
-        <polygon class="block yellow" points="72,6 96,10 92,38 68,32" />
-        <path class="ink heavy" d="M18 22 L 46 50 M 46 20 L 16 50" />
-        <path class="ink" d="M10 66 C 28 58, 52 74, 92 61" />
-        <path class="ink" d="M58 42 C 66 28, 90 30, 94 50 C 98 70, 72 76, 56 58" />
-        <path class="ground" d="M62 96 L 88 90" />
+        <polygon class="block yellow" points="0,0 46,3 50,42 0,48" />
+        <polygon class="block red" points="48,82 100,72 100,125 42,118" />
+        <polygon class="block blue" points="0,68 26,62 30,112 0,118" />
+        <path class="ink heavy" d="M2 50 C 20 38, 40 62, 58 44 S 86 34, 99 52" />
+        <path class="ink heavy" d="M62 8 C 74 0, 92 8, 90 26 C 88 42, 66 40, 58 22 C 54 12, 58 8, 62 8" />
+        <path class="ink" d="M10 22 L 28 8 L 22 28 L 12 24 Z" />
+        <path class="ink" d="M70 58 L 96 50 M 72 66 L 98 56 M 76 74 L 99 64" />
+        <path class="crayon" d="M36 70 C 52 60, 68 78, 90 66" />
+        <path class="ground" d="M6 102 L 18 90 M 12 108 L 26 92 M 18 114 L 34 96" />
+        <circle class="dot" cx="54" cy="18" r="1.2" />
+        <circle class="dot" cx="58" cy="15" r="0.9" />
+        <circle class="dot" cx="62" cy="19" r="1.15" />
       </g>
-    )
-  }
-  {
-    which === 2 && (
+    ) : which === 1 ? (
       <g>
-        <polygon class="block red" points="6,44 30,36 36,78 8,84" />
-        <polygon class="block yellow" points="54,16 94,12 98,32 58,38" />
-        <path class="ink heavy" d="M28 22 C 48 16, 70 28, 92 18" />
-        <path class="ink" d="M14 108 C 36 94, 62 114, 94 100" />
-        <path class="ink" d="M74 58 l 10 -16 l 8 18 l -18 4 z" />
-        <circle class="dot" cx="42" cy="28" r="1.15" />
-        <circle class="dot" cx="46.5" cy="26.2" r="1.05" />
-        <circle class="dot" cx="51" cy="29" r="1.25" />
+        <polygon class="block blue" points="0,88 52,80 56,125 0,125" />
+        <polygon class="block yellow" points="58,0 100,4 96,40 54,32" />
+        <polygon class="block red" points="0,4 28,0 32,36 0,40" />
+        <path class="ink heavy" d="M14 16 L 48 52 M 48 14 L 12 54" />
+        <path class="ink heavy" d="M6 64 C 28 52, 48 76, 96 58" />
+        <path class="ink" d="M54 48 C 64 32, 92 34, 96 54 C 100 76, 70 84, 52 64" />
+        <path class="ink" d="M70 96 L 92 88 M 74 104 L 98 94" />
+        <path class="crayon" d="M20 74 C 34 68, 28 86, 44 80" />
+        <path class="ground" d="M64 112 L 92 104" />
+        <circle class="dot" cx="40" cy="28" r="1.2" />
+        <circle class="dot" cx="44" cy="24" r="1" />
+        <circle class="dot" cx="48" cy="30" r="1.3" />
+        <circle class="dot" cx="52" cy="25" r="0.8" />
+      </g>
+    ) : (
+      <g>
+        <polygon class="block red" points="0,36 34,28 40,86 0,92" />
+        <polygon class="block yellow" points="46,6 100,2 100,40 50,46" />
+        <polygon class="block blue" points="58,78 100,70 100,112 52,118" />
+        <path class="ink heavy" d="M24 16 C 46 8, 72 24, 98 12" />
+        <path class="ink heavy" d="M8 108 C 32 92, 58 118, 96 100" />
+        <path class="ink" d="M48 52 C 58 40, 78 44, 82 60 C 86 76, 62 80, 50 66" />
+        <path class="ink" d="M68 50 l 12 -18 l 10 20 l -20 6 z" />
+        <path class="crayon" d="M8 24 C 20 16, 16 32, 28 26" />
+        <path class="ground" d="M12 70 L 22 60 M 16 76 L 28 64" />
+        <circle class="dot" cx="44" cy="22" r="1.15" />
+        <circle class="dot" cx="48" cy="18" r="1" />
+        <circle class="dot" cx="53" cy="23" r="1.25" />
+        <circle class="dot" cx="57" cy="19" r="0.85" />
       </g>
     )
   }
@@ -59,8 +88,12 @@ const which = variant % 3;
     overflow: visible;
   }
 
+  .sheet {
+    z-index: 0;
+  }
+
   .block {
-    opacity: 0.78;
+    opacity: 0.92;
   }
 
   .yellow {
@@ -78,19 +111,26 @@ const which = variant % 3;
   .ink {
     fill: none;
     stroke: #14110e;
-    stroke-width: 1.8;
+    stroke-width: 2.1;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
 
   .heavy {
-    stroke-width: 2.6;
+    stroke-width: 3.1;
+  }
+
+  .crayon {
+    fill: none;
+    stroke: #e23b2f;
+    stroke-width: 1.7;
+    stroke-linecap: round;
   }
 
   .ground {
     fill: none;
     stroke: #f7f1e4;
-    stroke-width: 1.3;
+    stroke-width: 1.5;
     stroke-linecap: round;
   }
 
