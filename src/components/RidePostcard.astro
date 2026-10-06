@@ -32,6 +32,25 @@ const cuts = [
 const washes = ['wash-a', 'wash-b', 'wash-c'];
 ---
 
+<svg class="paint-defs" aria-hidden="true">
+  <filter id="watercolour" color-interpolation-filters="sRGB" x="-6%" y="-6%" width="112%" height="112%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves="2" seed="5" result="bleed" />
+    <feDisplacementMap in="SourceGraphic" in2="bleed" scale="5" xChannelSelector="R" yChannelSelector="G" result="warped" />
+    <feGaussianBlur in="warped" stdDeviation="0.85" result="soft" />
+    <feColorMatrix
+      in="soft"
+      type="matrix"
+      values="1.06 0.05 0.02 0 0.03
+              0.02 1.00 0.03 0 0.02
+              0.02 0.05 0.94 0 0.04
+              0    0    0    1 0"
+    />
+  </filter>
+  <filter id="papergrain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" stitchTiles="stitch" />
+  </filter>
+</svg>
+
 <article class="stack">
   <section class="sheet cover">
     <div class="paper">
@@ -59,6 +78,8 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
       <figure class:list={['sheet', 'photo', washes[index % washes.length]]}>
         <div class="window" style={`clip-path: ${cuts[index % cuts.length]}`}>
           <img class="shot" src={src} alt="" width="1200" height="1500" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" draggable="false" />
+          <span class="bloom" aria-hidden="true"></span>
+          <span class="grain" aria-hidden="true"></span>
         </div>
         <img class="stamp" src={site.logo} alt="" width="64" height="82" draggable="false" />
         <span class="keep" aria-hidden="true"></span>
@@ -204,6 +225,13 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
     background: linear-gradient(125deg, #ff4f8b 0%, #ff6b3d 42%, #f6efe2 78%, #12a8a0 100%);
   }
 
+  .paint-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
   .window {
     position: relative;
     aspect-ratio: 4 / 5;
@@ -225,6 +253,32 @@ const washes = ['wash-a', 'wash-b', 'wash-c'];
     object-fit: cover;
     border-radius: 0;
     pointer-events: none;
+    transform: scale(1.08);
+    filter: url(#watercolour) saturate(1.12) contrast(0.94) brightness(1.04);
+  }
+
+  .bloom,
+  .grain {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .bloom {
+    mix-blend-mode: soft-light;
+    background:
+      radial-gradient(ellipse at 16% 20%, rgba(242, 193, 78, 0.72), transparent 56%),
+      radial-gradient(ellipse at 84% 22%, rgba(255, 79, 139, 0.48), transparent 50%),
+      radial-gradient(ellipse at 68% 86%, rgba(18, 168, 160, 0.52), transparent 54%),
+      radial-gradient(ellipse at 28% 78%, rgba(255, 107, 61, 0.42), transparent 48%);
+  }
+
+  .grain {
+    opacity: 0.32;
+    mix-blend-mode: multiply;
+    background: #f3ecdf;
+    filter: url(#papergrain);
   }
 
   .keep {
