@@ -141,7 +141,49 @@ const side = variant % 2;
   }
 </svg>
 
+{
+  !sheet && (
+    <svg class="scraps" viewBox="0 0 100 125" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      {which === 0 ? (
+        <g>
+          <path class="pencil corner" d="M3 14 C 4 6, 8 5, 16 7" />
+          <path class="pencil corner" d="M86 6 C 94 4, 97 8, 96 16" />
+          <polygon class="scrap cream" points="58,46 78,42 84,58 76,64 60,61 54,52" />
+          <path class="trace" d="M57,48 76,44 82,57 74,62 61,60 56,53" />
+          <polygon class="tape" points="22,28 40,24 42,29 24,33" />
+          <polygon class="scrap red" points="14,54 28,49 32,64 18,68 8,60" />
+          <path class="pencil" d="M18 88 C 24 84, 28 90, 34 86" />
+          <path class="pencil" d="M20 92 C 26 89, 31 94, 36 90" />
+          <path class="pencil" d="M70 96 l 6 -8 l 5 7" />
+        </g>
+      ) : which === 1 ? (
+        <g>
+          <path class="pencil corner" d="M4 108 C 5 116, 12 118, 18 114" />
+          <polygon class="scrap cream" points="8,18 26,14 30,32 22,38 10,34 6,24" />
+          <path class="trace" d="M10,20 24,16 28,31 20,36 11,32" />
+          <polygon class="tape" points="62,70 82,66 84,71 64,75" />
+          <polygon class="scrap yellow" points="44,78 60,74 64,90 50,96 40,88" />
+          <path class="pencil" d="M68 22 C 74 16, 82 18, 86 26 C 88 32, 78 34, 72 28" />
+          <path class="pencil" d="M40 100 l 8 2 M 42 104 l 9 1 M 44 108 l 7 2" />
+        </g>
+      ) : (
+        <g>
+          <path class="pencil corner" d="M84 110 C 92 112, 98 108, 96 100" />
+          <polygon class="scrap news" points="36,58 58,52 64,70 54,78 38,74 32,64" />
+          <path class="trace" d="M38,60 56,55 62,69 52,75 39,72 34,65" />
+          <polygon class="tape" points="6,48 22,44 24,49 8,53" />
+          <polygon class="scrap blue" points="70,86 86,82 90,98 76,104 66,94" />
+          <path class="pencil" d="M72 34 C 78 30, 86 36, 90 32" />
+          <path class="pencil" d="M14 92 l 4 -7 l 6 5 l -2 6 z" />
+          <path class="pencil" d="M48 18 C 52 14, 58 16, 56 22" />
+        </g>
+      )}
+    </svg>
+  )
+}
+
 <style>
+  .scraps,
   .marks {
     position: absolute;
     inset: 0;
@@ -152,8 +194,51 @@ const side = variant % 2;
     overflow: visible;
   }
 
+  .scraps {
+    z-index: 3;
+  }
+
   .sheet {
     z-index: 0;
+  }
+
+  .scrap {
+    stroke: #24180f;
+    stroke-width: 0.65;
+    stroke-linejoin: round;
+  }
+
+  .cream {
+    fill: #f6efe2;
+  }
+
+  .news {
+    fill: #efe6d2;
+  }
+
+  .trace {
+    fill: none;
+    stroke: #24180f;
+    stroke-width: 0.45;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .tape {
+    fill: rgba(242, 210, 26, 0.55);
+    stroke: none;
+  }
+
+  .pencil {
+    fill: none;
+    stroke: #2a2118;
+    stroke-width: 0.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .corner {
+    stroke-width: 0.9;
   }
 
   .block {
