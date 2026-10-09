@@ -1,5 +1,5 @@
 ---
-title: Ian my friend form Manchester
+title: Ian my friend ftom Manchester
 pubDate: 2026-10-06
 note: Ian, a long time friend whom i have never met has sent me a surptise gift,
   it is a book a wonderful book of the style council which means the world to
