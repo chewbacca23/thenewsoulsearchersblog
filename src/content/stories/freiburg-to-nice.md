@@ -1,16 +1,16 @@
 ---
-title: 'Freiburg to Nice: Four Grown Men, Ten Days, One Very Expensive Coffee'
-headline: 'Freiburg to Nice: Four Grown Men, Ten Days, One Very Expensive Coffee'
-description: >-
-  Four friends, Freiburg to Café du Cycliste in Nice. Canals, Saône, Rhône,
-  Mistral at our backs — and maybe a borrowed Cervélo. Ten days, then coffee.
-cover: /stories/nice-baie-des-anges.jpg
+title: "Freiburg to Nice: Four Grown Men, Ten Days, One Very Expensive Coffee"
+pubDate: 2026-10-30
+headline: "Freiburg to Nice: Four Grown Men, Ten Days, One Very Expensive Coffee"
+description: Four friends, Freiburg to Café du Cycliste in Nice. Canals, Saône,
+  Rhône, Mistral at our backs — and maybe a borrowed Cervélo. Ten days, then
+  coffee.
+draft: false
+cover: /stories/img_5966.jpeg
 gallery:
   - /stories/nice-baie-des-anges.jpg
   - /stories/nice-promenade-detail.jpg
-pubDate: 2026-10-30
 order: 0
-draft: false
 ---
 
 Every great adventure starts with a bad idea that nobody talks you out of. Ours: four friends, one start in Freiburg, and a finish at the Café du Cycliste in Nice, just to drink a coffee. We could have had one at home, but where’s the fun in that?
