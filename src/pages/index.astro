@@ -174,19 +174,6 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
       </div>
     </div>
   </section>
-
-  <section class="stood-tease" aria-label="Where I stood">
-    <div class="stood-tease-world" aria-hidden="true"></div>
-    <div class="site-shell stood-tease-inner">
-      <p class="stood-tease-eyebrow">The trail</p>
-      <h2 class="stood-tease-title">Where I stood</h2>
-      <p class="stood-tease-lead">
-        Soft pins from the rides.<br />
-        A quiet map of places this bike has been.
-      </p>
-      <a class="btn btn-ghost" href="/stood">Open the map</a>
-    </div>
-  </section>
 </BaseLayout>
 
 <style>
@@ -457,55 +444,5 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
     .hero-photo {
       transform: scale(1.04);
     }
-  }
-
-  .stood-tease {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    padding: 3.25rem 0 3.75rem;
-    border-top: 1px solid rgba(215, 224, 232, 0.08);
-    background:
-      radial-gradient(ellipse 70% 80% at 15% 20%, rgba(30, 58, 69, 0.35), transparent 55%),
-      radial-gradient(ellipse 50% 60% at 90% 80%, rgba(212, 163, 90, 0.08), transparent 50%);
-  }
-
-  .stood-tease-world {
-    position: absolute;
-    inset: -20% -5% -30% 28%;
-    z-index: 0;
-    pointer-events: none;
-    background: url('/stood/world.svg') right center / min(920px, 95%) no-repeat;
-    opacity: 0.12;
-    filter: saturate(0.65);
-  }
-
-  .stood-tease-inner {
-    position: relative;
-    z-index: 1;
-    max-width: 28rem;
-  }
-
-  .stood-tease-eyebrow {
-    margin: 0 0 0.4rem;
-    color: var(--amber);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-
-  .stood-tease-title {
-    margin: 0 0 0.55rem;
-    font-family: var(--font-display);
-    font-size: clamp(1.65rem, 3vw, 2.1rem);
-    color: var(--paper);
-    font-weight: 500;
-  }
-
-  .stood-tease-lead {
-    margin: 0 0 1.15rem;
-    color: rgba(215, 224, 232, 0.78);
-    line-height: 1.55;
   }
 </style>
