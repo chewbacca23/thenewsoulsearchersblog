@@ -586,13 +586,14 @@ describe('looksDashboardPage', () => {
     assert.match(html, />11</);
     assert.match(html, />8</);
     assert.match(html, />9</);
-    assert.match(html, /This month/);
-    assert.match(html, /This year/);
+    assert.match(html, /looks-bay-label">Month</);
+    assert.match(html, /looks-bay-label">Year</);
+    assert.match(html, /looks-board/);
     assert.match(html, /<h2>12 months<\/h2>/);
     assert.match(html, /<h2>Years<\/h2>/);
     assert.match(html, /<h2>Cities<\/h2>/);
-    assert.match(html, /n<sub>month<\/sub>/);
-    assert.match(html, /n<sub>day<\/sub>/);
+    assert.match(html, /data-looks="month"/);
+    assert.match(html, /data-looks="today"/);
     assert.match(html, /Home/);
     const withFrom = await looksDashboardPage({
       today: 1,
