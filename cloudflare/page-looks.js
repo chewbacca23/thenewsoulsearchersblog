@@ -809,17 +809,15 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     .eyebrow { margin:0 0 .4rem; letter-spacing:.16em; text-transform:uppercase; font-size:.78rem; color:var(--amber); font-weight:700; }
     h1 { margin:0 0 .75rem; font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-weight:300; font-size: clamp(2rem, 4vw, 2.8rem); color:var(--paper); }
     .lead { margin:0 0 1.75rem; color:rgba(215,224,232,.72); }
-    .cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0; margin:0 0 2.25rem; border:1px solid rgba(215,224,232,.16); background:rgba(8,12,17,.45); }
-    @media (min-width:720px) { .cards { grid-template-columns:repeat(5,minmax(0,1fr)); } }
-    .card { padding:.95rem 1rem 1.05rem; border:0; border-right:1px solid rgba(215,224,232,.12); border-bottom:1px solid rgba(215,224,232,.12); border-radius:0; background:transparent; }
-    @media (min-width:720px) { .card:nth-child(5n){border-right:0} .card{border-bottom:0} }
-    @media (max-width:719px) { .card:nth-child(2n){border-right:0} .card:nth-child(n+5){border-bottom:0} }
-    .card-label { margin:0; color:var(--amber); font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-size:.95rem; font-weight:300; letter-spacing:.04em; line-height:1; }
-    .card-label sub { font-size:.65em; }
-    .card-hint { margin:.28rem 0 0; color:rgba(215,224,232,.55); font-size:.68rem; font-weight:500; letter-spacing:.14em; text-transform:uppercase; }
-    .card-num { margin:.55rem 0 0; color:var(--paper); font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-size:clamp(1.7rem,3.8vw,2.2rem); font-weight:300; letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums; }
+    .looks-board { margin:0 0 2.25rem; padding:.55rem .55rem .7rem; border-radius:.2rem; border:1px solid rgba(0,0,0,.85); background:linear-gradient(180deg,rgba(255,220,160,.06),transparent 28%),linear-gradient(180deg,#3a2f24 0%,#1a1510 42%,#100d0a 100%); box-shadow:inset 0 1px 0 rgba(255,230,180,.12),inset 0 -2px 0 rgba(0,0,0,.45); }
+    .looks-board-mark { margin:0 0 .45rem .15rem; color:rgba(242,226,184,.55); font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:.62rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase; }
+    .looks-board-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.35rem; }
+    @media (max-width:719px) { .looks-board-row { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    .looks-bay { display:flex; flex-direction:column; align-items:center; gap:.4rem; min-width:0; padding:.45rem .3rem .55rem; border-radius:.12rem; border:1px solid rgba(0,0,0,.55); background:linear-gradient(180deg,#221c16 0%,#14110d 100%); }
+    .looks-bay-label { margin:0; color:#e6d3a2; font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:.58rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; text-align:center; white-space:nowrap; }
+    .card-num { margin:0; color:#f2e2b8; font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:clamp(1.7rem,3.8vw,2.2rem); font-weight:700; letter-spacing:0; line-height:1; font-variant-numeric:tabular-nums; }
     .card-num.is-flap { letter-spacing:0; }
-    .flap-board { --flap-w:clamp(1.35rem,3.2vw,1.7rem); --flap-h:clamp(1.9rem,4.4vw,2.35rem); display:inline-flex; gap:.28rem; align-items:center; padding:.28rem .32rem; border-radius:.18rem; background:linear-gradient(180deg,#2a2118 0%,#15110d 100%); box-shadow:inset 0 1px 0 rgba(255,220,170,.08),inset 0 -1px 0 rgba(0,0,0,.55); }
+    .flap-board { --flap-w:clamp(1.2rem,2.6vw,1.45rem); --flap-h:clamp(1.7rem,3.8vw,2.05rem); display:inline-flex; gap:.14rem; align-items:center; justify-content:center; }
     .flap-cell { position:relative; flex:0 0 var(--flap-w); width:var(--flap-w); height:var(--flap-h); perspective:600px; border-radius:.12rem; border:1px solid rgba(0,0,0,.75); background:#0c0b09; box-shadow:0 0 0 1px rgba(180,150,100,.18); overflow:hidden; color:#f2e2b8; font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:calc(var(--flap-h)*.62); font-weight:700; line-height:1; }
     .flap-cell::after { content:""; position:absolute; left:0; right:0; top:50%; z-index:6; height:2px; margin-top:-1px; background:#050403; pointer-events:none; }
     .flap-panel { position:absolute; left:0; width:100%; height:50%; overflow:hidden; background:linear-gradient(180deg,#1c1914 0%,#12100c 100%); }
@@ -865,12 +863,15 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     <p class="eyebrow">Open counts</p>
     <h1>Looks</h1>
     <p class="lead">Opens per page, day, week, and month — Berlin calendar. No names. Private for you.</p>
-    <div class="cards" role="group" aria-label="Summary counts">
-      <article class="card"><p class="card-label">n<sub>day</sub></p><p class="card-hint">Today</p><p class="card-num">${today}</p></article>
-      <article class="card"><p class="card-label">n<sub>7</sub></p><p class="card-hint">Last 7 days</p><p class="card-num">${week}</p></article>
-      <article class="card"><p class="card-label">n<sub>month</sub></p><p class="card-hint">This month</p><p class="card-num">${month}</p></article>
-      <article class="card"><p class="card-label">n<sub>year</sub></p><p class="card-hint">This year</p><p class="card-num">${year}</p></article>
-      <article class="card"><p class="card-label">Σ</p><p class="card-hint">All time</p><p class="card-num">${total}</p></article>
+    <div class="looks-board" role="group" aria-label="Summary counts">
+      <p class="looks-board-mark" aria-hidden="true">Looks · Berlin</p>
+      <div class="looks-board-row">
+        <article class="looks-bay"><p class="looks-bay-label">Today</p><p class="card-num" data-looks="today">${today}</p></article>
+        <article class="looks-bay"><p class="looks-bay-label">7 days</p><p class="card-num" data-looks="week">${week}</p></article>
+        <article class="looks-bay"><p class="looks-bay-label">Month</p><p class="card-num" data-looks="month">${month}</p></article>
+        <article class="looks-bay"><p class="looks-bay-label">Year</p><p class="card-num" data-looks="year">${year}</p></article>
+        <article class="looks-bay"><p class="looks-bay-label">Total</p><p class="card-num" data-looks="total">${total}</p></article>
+      </div>
     </div>
     <h2>Latest opens <span>${Array.isArray(summary?.recent) ? summary.recent.length : 0}</span></h2>
     <p class="note">Each row is one real page open. Newest first — path, city, country, IP, referrer. City is Cloudflare IP geo (~60–80% right; VPN / mobile hubs can miss). Private for you. Open Home in another tab, refresh, and watch a row land.</p>

@@ -18,32 +18,30 @@ import MemberDelete from '../components/MemberDelete.astro';
         after this Worker is live.
       </p>
 
-      <div class="cards" role="group" aria-label="Summary counts">
-        <article class="card">
-          <p class="card-label">n<sub>day</sub></p>
-          <p class="card-hint">Today</p>
-          <p class="card-num" data-looks="today">—</p>
-        </article>
-        <article class="card">
-          <p class="card-label">n<sub>7</sub></p>
-          <p class="card-hint">Last 7 days</p>
-          <p class="card-num" data-looks="week">—</p>
-        </article>
-        <article class="card">
-          <p class="card-label">n<sub>month</sub></p>
-          <p class="card-hint">This month</p>
-          <p class="card-num" data-looks="month">—</p>
-        </article>
-        <article class="card">
-          <p class="card-label">n<sub>year</sub></p>
-          <p class="card-hint">This year</p>
-          <p class="card-num" data-looks="year">—</p>
-        </article>
-        <article class="card">
-          <p class="card-label">Σ</p>
-          <p class="card-hint">All time</p>
-          <p class="card-num" data-looks="total">—</p>
-        </article>
+      <div class="looks-board" role="group" aria-label="Summary counts">
+        <p class="looks-board-mark" aria-hidden="true">Looks · Berlin</p>
+        <div class="looks-board-row">
+          <article class="looks-bay">
+            <p class="looks-bay-label">Today</p>
+            <p class="card-num" data-looks="today">—</p>
+          </article>
+          <article class="looks-bay">
+            <p class="looks-bay-label">7 days</p>
+            <p class="card-num" data-looks="week">—</p>
+          </article>
+          <article class="looks-bay">
+            <p class="looks-bay-label">Month</p>
+            <p class="card-num" data-looks="month">—</p>
+          </article>
+          <article class="looks-bay">
+            <p class="looks-bay-label">Year</p>
+            <p class="card-num" data-looks="year">—</p>
+          </article>
+          <article class="looks-bay">
+            <p class="looks-bay-label">Total</p>
+            <p class="card-num" data-looks="total">—</p>
+          </article>
+        </div>
       </div>
       <script is:inline>
         (function () {
@@ -333,86 +331,75 @@ import MemberDelete from '../components/MemberDelete.astro';
     font-variant-numeric: tabular-nums lining-nums;
   }
 
-  .cards {
-    display: grid;
-    gap: 0;
+  /* One old airport strip — only this top row */
+  .looks-board {
     margin: 1.75rem 0 2.25rem;
-    border: 1px solid rgba(215, 224, 232, 0.16);
-    background: rgba(8, 12, 17, 0.45);
+    padding: 0.55rem 0.55rem 0.7rem;
+    border-radius: 0.2rem;
+    border: 1px solid rgba(0, 0, 0, 0.85);
+    background:
+      linear-gradient(180deg, rgba(255, 220, 160, 0.06), transparent 28%),
+      linear-gradient(180deg, #3a2f24 0%, #1a1510 42%, #100d0a 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 230, 180, 0.12),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.45),
+      0 8px 22px rgba(0, 0, 0, 0.35);
   }
 
-  @media (min-width: 720px) {
-    .cards {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-    }
+  .looks-board-mark {
+    margin: 0 0 0.45rem 0.15rem;
+    color: rgba(242, 226, 184, 0.55);
+    font-family: 'Courier New', 'Lucida Console', ui-monospace, monospace;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .looks-board-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.35rem;
   }
 
   @media (max-width: 719px) {
-    .cards {
+    .looks-board-row {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  .card {
-    padding: 0.95rem 1rem 1.05rem;
-    border: 0;
-    border-right: 1px solid rgba(215, 224, 232, 0.12);
-    border-bottom: 1px solid rgba(215, 224, 232, 0.12);
-    border-radius: 0;
-    background: transparent;
+  .looks-bay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    padding: 0.45rem 0.3rem 0.55rem;
+    border-radius: 0.12rem;
+    border: 1px solid rgba(0, 0, 0, 0.55);
+    background: linear-gradient(180deg, #221c16 0%, #14110d 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 220, 170, 0.05);
   }
 
-  @media (min-width: 720px) {
-    .card:nth-child(5n) {
-      border-right: 0;
-    }
-
-    .card {
-      border-bottom: 0;
-    }
-  }
-
-  @media (max-width: 719px) {
-    .card:nth-child(2n) {
-      border-right: 0;
-    }
-
-    .card:nth-child(n + 5) {
-      border-bottom: 0;
-    }
-  }
-
-  .card-label {
+  .looks-bay-label {
     margin: 0;
-    color: var(--amber);
-    font-family: var(--font-display);
-    font-size: 0.95rem;
-    font-weight: 300;
-    letter-spacing: 0.04em;
-    line-height: 1;
-  }
-
-  .card-label sub {
-    font-size: 0.65em;
-    bottom: -0.08em;
-  }
-
-  .card-hint {
-    margin: 0.28rem 0 0;
-    color: rgba(215, 224, 232, 0.55);
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.14em;
+    color: #e6d3a2;
+    font-family: 'Courier New', 'Lucida Console', ui-monospace, monospace;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .card-num {
-    margin: 0.55rem 0 0;
-    color: var(--paper);
-    font-family: var(--font-display);
+    margin: 0;
+    color: #f2e2b8;
+    font-family: 'Courier New', 'Lucida Console', ui-monospace, monospace;
     font-size: clamp(1.7rem, 3.8vw, 2.2rem);
-    font-weight: 300;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    letter-spacing: 0;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
@@ -421,20 +408,13 @@ import MemberDelete from '../components/MemberDelete.astro';
     letter-spacing: 0;
   }
 
-  /* 1970s–80s Solari board: one digit per tile, split through the middle */
   .flap-board {
-    --flap-w: clamp(1.35rem, 3.2vw, 1.7rem);
-    --flap-h: clamp(1.9rem, 4.4vw, 2.35rem);
+    --flap-w: clamp(1.2rem, 2.6vw, 1.45rem);
+    --flap-h: clamp(1.7rem, 3.8vw, 2.05rem);
     display: inline-flex;
-    gap: 0.28rem;
+    gap: 0.14rem;
     align-items: center;
-    padding: 0.28rem 0.32rem;
-    border-radius: 0.18rem;
-    background: linear-gradient(180deg, #2a2118 0%, #15110d 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 220, 170, 0.08),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.55),
-      0 1px 0 rgba(255, 255, 255, 0.04);
+    justify-content: center;
   }
 
   .flap-cell {
