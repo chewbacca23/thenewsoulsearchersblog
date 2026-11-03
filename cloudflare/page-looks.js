@@ -809,18 +809,20 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     .eyebrow { margin:0 0 .4rem; letter-spacing:.16em; text-transform:uppercase; font-size:.78rem; color:var(--amber); font-weight:700; }
     h1 { margin:0 0 .75rem; font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-weight:300; font-size: clamp(2rem, 4vw, 2.8rem); color:var(--paper); }
     .lead { margin:0 0 1.75rem; color:rgba(215,224,232,.72); }
-    .looks-board { margin:0 0 2.25rem; padding:.85rem .75rem 1rem; border-radius:.55rem; background:#141414; border:1px solid #0a0a0a; box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 28px rgba(0,0,0,.45); }
-    .looks-board-mark { margin:0 0 .75rem; color:#f5f5f5; font-family:Helvetica,Arial,sans-serif; font-size:.95rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; text-align:center; }
-    .looks-board-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.55rem; }
+    .looks-board { --crt:#ffb000; --crt-dim:#c47a00; --crt-bg:#070904; margin:0 0 2.25rem; position:relative; isolation:isolate; overflow:hidden; padding:.95rem .85rem 1.1rem; border-radius:.35rem; border:3px solid #2a2a22; background:radial-gradient(ellipse 90% 70% at 50% 40%,rgba(255,176,0,.07),transparent 70%),var(--crt-bg); box-shadow:inset 0 0 0 1px #111,inset 0 0 40px rgba(0,0,0,.85),0 0 18px rgba(255,176,0,.08); }
+    .looks-board::before { content:""; position:absolute; inset:0; z-index:3; pointer-events:none; background:repeating-linear-gradient(to bottom,rgba(0,0,0,.18) 0,rgba(0,0,0,.18) 1px,transparent 1px,transparent 3px); opacity:.55; }
+    .looks-board::after { content:""; position:absolute; inset:0; z-index:4; pointer-events:none; background:radial-gradient(ellipse 75% 65% at 50% 45%,transparent 40%,rgba(0,0,0,.55) 100%); }
+    .looks-board-mark { position:relative; z-index:2; margin:0 0 .85rem; color:var(--crt); font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:.78rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase; text-align:center; text-shadow:0 0 8px rgba(255,176,0,.55); }
+    .looks-board-row { position:relative; z-index:2; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.55rem; }
     @media (max-width:719px) { .looks-board-row { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     .looks-bay { display:flex; flex-direction:column; align-items:center; gap:.45rem; min-width:0; overflow:hidden; }
-    .looks-bay-label { margin:0; color:#e0b84e; font-family:Helvetica,Arial,sans-serif; font-size:.62rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; text-align:center; }
-    .card-num { margin:0; max-width:100%; overflow:hidden; color:#fff; font-family:Helvetica,Arial,sans-serif; font-size:1.25rem; font-weight:700; line-height:1; }
+    .looks-bay-label { margin:0; color:var(--crt-dim); font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:.6rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; text-align:center; text-shadow:0 0 6px rgba(255,176,0,.25); }
+    .card-num { margin:0; max-width:100%; overflow:hidden; color:var(--crt); font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:1.25rem; font-weight:700; line-height:1; }
     .card-num.is-solari { display:flex; justify-content:center; }
     .solari-row { display:inline-flex; gap:3px; align-items:center; justify-content:center; max-width:100%; }
-    .solari-flap { position:relative; flex:0 0 auto; width:22px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:3px; background:linear-gradient(180deg,#2a2a2a 0%,#1a1a1a 48%,#0d0d0d 52%,#171717 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -1px 0 rgba(0,0,0,.55); overflow:hidden; perspective:240px; }
-    .solari-flap::after { content:""; position:absolute; left:0; right:0; top:50%; z-index:2; height:2px; margin-top:-1px; background:#000; pointer-events:none; }
-    .solari-flap-text { position:relative; z-index:1; color:#f7f7f7; font-family:Helvetica,Arial,sans-serif; font-size:18px; font-weight:800; line-height:1; transform-origin:50% 50%; }
+    .solari-flap { position:relative; flex:0 0 auto; width:22px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:2px; border:1px solid rgba(255,176,0,.18); background:linear-gradient(180deg,#12180c 0%,#0a0e06 48%,#050703 52%,#0c1208 100%); box-shadow:inset 0 1px 0 rgba(255,176,0,.08),inset 0 -1px 0 rgba(0,0,0,.7),0 0 6px rgba(255,176,0,.12); overflow:hidden; perspective:240px; }
+    .solari-flap::after { content:""; position:absolute; left:0; right:0; top:50%; z-index:2; height:2px; margin-top:-1px; background:rgba(0,0,0,.92); pointer-events:none; }
+    .solari-flap-text { position:relative; z-index:1; color:var(--crt); font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:18px; font-weight:700; line-height:1; text-shadow:0 0 6px rgba(255,176,0,.65); transform-origin:50% 50%; }
     .solari-flap.is-flipping .solari-flap-text { animation:solari-tick .3s ease-in-out; }
     @keyframes solari-tick { 0%{transform:rotateX(0)} 45%{transform:rotateX(-90deg)} 55%{transform:rotateX(-90deg)} 100%{transform:rotateX(0)} }
     @media (max-width:719px) { .solari-flap{width:18px;height:28px} .solari-flap-text{font-size:15px} }
@@ -857,7 +859,7 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     <h1>Looks</h1>
     <p class="lead">Opens per page, day, week, and month — Berlin calendar. No names. Private for you.</p>
     <div class="looks-board" role="group" aria-label="Summary counts">
-      <p class="looks-board-mark" aria-hidden="true">Looks</p>
+      <p class="looks-board-mark" aria-hidden="true">◇ LOOKS TERMINAL · BERLIN ◇</p>
       <div class="looks-board-row">
         <article class="looks-bay"><p class="looks-bay-label">Today</p><p class="card-num" data-looks="today">${today}</p></article>
         <article class="looks-bay"><p class="looks-bay-label">7 days</p><p class="card-num" data-looks="week">${week}</p></article>
