@@ -817,7 +817,23 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     .card-label { margin:0; color:var(--amber); font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-size:.95rem; font-weight:300; letter-spacing:.04em; line-height:1; }
     .card-label sub { font-size:.65em; }
     .card-hint { margin:.28rem 0 0; color:rgba(215,224,232,.55); font-size:.68rem; font-weight:500; letter-spacing:.14em; text-transform:uppercase; }
-    .card-num { margin:.55rem 0 0; color:var(--paper); font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-size:clamp(2rem,4.5vw,2.65rem); font-weight:300; letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums; }
+    .card-num { margin:.55rem 0 0; color:var(--paper); font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-size:clamp(1.85rem,4.2vw,2.45rem); font-weight:300; letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums; }
+    .card-num.is-flap { letter-spacing:0; }
+    .flap-board { display:inline-flex; gap:.16rem; align-items:stretch; }
+    .flap-cell { position:relative; display:inline-block; width:.72em; height:1.22em; perspective:420px; border-radius:.1em; border:1px solid rgba(215,224,232,.2); background:linear-gradient(180deg,#24303a 0%,#141b22 48%,#0a0e12 52%,#121820 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 -1px 0 rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.35); overflow:hidden; color:#f3ebe0; }
+    .flap-cell::after { content:""; position:absolute; left:0; right:0; top:50%; z-index:4; height:1px; background:rgba(0,0,0,.72); pointer-events:none; }
+    .flap-half { position:absolute; left:0; right:0; height:50%; overflow:hidden; }
+    .flap-top { top:0; } .flap-bottom { bottom:0; }
+    .flap-char { position:absolute; left:0; right:0; display:flex; align-items:center; justify-content:center; height:200%; font-weight:500; line-height:1; text-shadow:0 1px 0 rgba(0,0,0,.55); }
+    .flap-top .flap-char { top:0; } .flap-bottom .flap-char { bottom:0; }
+    .flap-hinge { position:absolute; left:0; right:0; top:0; height:50%; z-index:5; transform-origin:50% 100%; transform-style:preserve-3d; }
+    .flap-face { position:absolute; inset:0; overflow:hidden; backface-visibility:hidden; -webkit-backface-visibility:hidden; background:linear-gradient(180deg,#2a3742 0%,#171e26 100%); }
+    .flap-front .flap-char { top:0; height:200%; }
+    .flap-back { transform:rotateX(180deg); background:linear-gradient(180deg,#10161c 0%,#1c262f 100%); }
+    .flap-back .flap-char { bottom:0; top:auto; height:200%; }
+    .flap-hinge.is-flipping { animation:looks-flap-flip .28s ease-in forwards; }
+    @keyframes looks-flap-flip { from { transform:rotateX(0deg); } to { transform:rotateX(-180deg); } }
+    @media (prefers-reduced-motion:reduce) { .flap-hinge.is-flipping { animation:none; } }
     h2 { margin:2.35rem 0 .55rem; padding:0; font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-size:1.15rem; font-weight:300; letter-spacing:.06em; text-transform:uppercase; }
     ol { margin:0; padding:0; list-style:none; border:1px solid rgba(215,224,232,.14); border-radius:0; overflow:hidden; background:rgba(8,12,17,.4); }
     li { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1rem; align-items:baseline; padding:.72rem .95rem; border-top:1px solid rgba(215,224,232,.09); font-variant-numeric:tabular-nums; }
@@ -888,6 +904,9 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     <ol data-postcard-shares-list>${shareRows}</ol>
     <p class="back"><a href="/">← Home</a> · <a href="/admin/">Editor</a></p>
   </main>
+  <script>
+  (function(){var D='0123456789',reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;function parseTarget(raw){var t=String(raw||'').trim();if(!t||t==='—'||t==='-'||t==='–')return null;var d=t.replace(/[^\\d]/g,'');if(!d)return null;return d.replace(/^0+(?=\\d)/,'')||'0';}function cellHtml(ch){return '<span class="flap-cell" aria-hidden="true"><span class="flap-half flap-top"><span class="flap-char">'+ch+'</span></span><span class="flap-half flap-bottom"><span class="flap-char">'+ch+'</span></span><span class="flap-hinge" hidden><span class="flap-face flap-front"><span class="flap-char"></span></span><span class="flap-face flap-back"><span class="flap-char"></span></span></span></span>';}function setStatic(cell,ch){cell.querySelectorAll('.flap-half .flap-char').forEach(function(n){n.textContent=ch;});}function flipOnce(cell,fromCh,toCh){return new Promise(function(resolve){var hinge=cell.querySelector('.flap-hinge'),front=cell.querySelector('.flap-front .flap-char'),back=cell.querySelector('.flap-back .flap-char');if(!hinge||!front||!back){setStatic(cell,toCh);resolve();return;}front.textContent=fromCh;back.textContent=toCh;setStatic(cell,fromCh);hinge.hidden=false;hinge.classList.remove('is-flipping');void hinge.offsetWidth;hinge.classList.add('is-flipping');var done=false;function finish(){if(done)return;done=true;hinge.classList.remove('is-flipping');hinge.hidden=true;setStatic(cell,toCh);resolve();}hinge.addEventListener('animationend',finish,{once:true});setTimeout(finish,320);});}async function runCell(cell,finalCh,delay){await new Promise(function(r){setTimeout(r,delay);});if(reduce||finalCh==='—'){setStatic(cell,finalCh);return;}var current=D[Math.floor(Math.random()*10)];setStatic(cell,current);var spins=3+Math.floor(Math.random()*3);for(var i=0;i<spins;i++){var next=i===spins-1?finalCh:D[Math.floor(Math.random()*10)];await flipOnce(cell,current,next);current=next;}if(current!==finalCh)await flipOnce(cell,current,finalCh);}function mount(el){if(!el||el.dataset.flapReady==='1'||!el.classList.contains('card-num'))return;var target=parseTarget(el.textContent);var chars=target?target.split(''):['—'];el.dataset.flapReady='1';el.setAttribute('aria-label',target||'—');el.classList.add('is-flap');el.innerHTML='<span class="flap-board">'+chars.map(cellHtml).join('')+'</span>';el.querySelectorAll('.flap-cell').forEach(function(cell,i){runCell(cell,chars[i],90+i*110);});}document.querySelectorAll('.card-num[data-looks]').forEach(mount);})();
+  </script>
 </body>
 </html>`,
     {
