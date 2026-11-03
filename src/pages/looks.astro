@@ -50,8 +50,9 @@ import MemberDelete from '../components/MemberDelete.astro';
         Latest opens <span data-looks-recent-count>—</span>
       </h2>
       <p class="note">
-        Each row is one real page open. Newest first — path, city, country, IP, referrer. Private
-        for you. Open Home in another tab, refresh, and watch a row land.
+        Each row is one real page open. Newest first — path, city, country, IP, referrer. City is
+        Cloudflare IP geo (~60–80% right; VPN / mobile hubs can miss). Private for you. Open Home
+        in another tab, refresh, and watch a row land.
       </p>
       <ol class="pages" data-looks-recent>
         <li class="empty">Open any public page in another tab, then refresh — a row shows here.</li>
@@ -154,14 +155,19 @@ import MemberDelete from '../components/MemberDelete.astro';
 
       <h2 class="pages-title">Cities</h2>
       <p class="note">
-        Approximate from the connection (IP geo) — Cologne, Freiburg, and the rest. VPN or mobile
-        hubs can land on the wrong town. New opens only from now on.
+        From the visitor’s IP via Cloudflare geo — roughly <strong>60–80%</strong> right at city
+        level (country is usually stronger). Think “this network looks like Chicago / Amsterdam,”
+        not a GPS pin. VPN, corporate gateways, and mobile hubs can land on the wrong town. New
+        opens only from now on.
       </p>
       <ol class="pages" data-looks-cities>
         <li class="empty">City shows after someone opens a page.</li>
       </ol>
 
       <h2 class="pages-title">Countries</h2>
+      <p class="note">
+        Same IP geo as cities, but country is typically more reliable than town (~90%+ in practice).
+      </p>
       <ol class="pages" data-looks-countries>
         <li class="empty">Country shows after someone opens a page.</li>
       </ol>

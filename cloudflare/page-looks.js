@@ -385,7 +385,7 @@ export function sanitizeCountry(raw) {
   return code;
 }
 
-/** Approximate city from Cloudflare IP geo (Cologne, Freiburg, …). */
+/** Approximate city from Cloudflare IP geo (~60–80% city accuracy; Cologne, Freiburg, …). */
 export function sanitizeCity(raw) {
   const value = String(raw || '')
     .replace(/\s+/g, ' ')
@@ -857,7 +857,7 @@ export function looksDashboardPage(summary, members = [], shares = []) {
       <article class="card"><p class="card-label">Σ</p><p class="card-hint">All time</p><p class="card-num">${total}</p></article>
     </div>
     <h2>Latest opens <span>${Array.isArray(summary?.recent) ? summary.recent.length : 0}</span></h2>
-    <p class="note">Each row is one real page open. Newest first — path, city, country, IP, referrer. Private for you. Open Home in another tab, refresh, and watch a row land.</p>
+    <p class="note">Each row is one real page open. Newest first — path, city, country, IP, referrer. City is Cloudflare IP geo (~60–80% right; VPN / mobile hubs can miss). Private for you. Open Home in another tab, refresh, and watch a row land.</p>
     <ol>${recentRows}</ol>
     <h2>14 days</h2>
     <p class="note">Berlin days. Column height ∝ opens.</p>
@@ -873,9 +873,10 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     <h2>Pages</h2>
     <ol>${rows}</ol>
     <h2>Cities</h2>
-    <p class="note">Approximate from the connection (IP geo). VPN or mobile hubs can land on the wrong town.</p>
+    <p class="note">From the visitor’s IP via Cloudflare geo — roughly <strong>60–80%</strong> right at city level (country is usually stronger). Think “this network looks like Chicago / Amsterdam,” not a GPS pin. VPN, corporate gateways, and mobile hubs can land on the wrong town.</p>
     <ol>${cityRows}</ol>
     <h2>Countries</h2>
+    <p class="note">Same IP geo as cities, but country is typically more reliable than town (~90%+ in practice).</p>
     <ol>${countryRows}</ol>
     <h2>Referrers</h2>
     <ol>${fromRows}</ol>
