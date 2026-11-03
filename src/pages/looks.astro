@@ -64,39 +64,44 @@ import MemberDelete from '../components/MemberDelete.astro';
           function cellHtml(ch) {
             return (
               '<span class="flap-cell" aria-hidden="true">' +
-              '<span class="flap-half flap-top"><span class="flap-char">' +
+              '<span class="flap-panel flap-top"><span class="flap-glyph">' +
               ch +
               '</span></span>' +
-              '<span class="flap-half flap-bottom"><span class="flap-char">' +
+              '<span class="flap-panel flap-bottom"><span class="flap-glyph">' +
               ch +
               '</span></span>' +
               '<span class="flap-hinge" hidden>' +
-              '<span class="flap-face flap-front"><span class="flap-char"></span></span>' +
-              '<span class="flap-face flap-back"><span class="flap-char"></span></span>' +
+              '<span class="flap-face flap-front"><span class="flap-glyph"></span></span>' +
+              '<span class="flap-face flap-back"><span class="flap-glyph"></span></span>' +
               '</span>' +
               '</span>'
             );
           }
 
-          function setStatic(cell, ch) {
-            cell.querySelectorAll('.flap-half .flap-char').forEach(function (node) {
-              node.textContent = ch;
-            });
+          function setFull(cell, ch) {
+            var top = cell.querySelector('.flap-top .flap-glyph');
+            var bottom = cell.querySelector('.flap-bottom .flap-glyph');
+            if (top) top.textContent = ch;
+            if (bottom) bottom.textContent = ch;
           }
 
           function flipOnce(cell, fromCh, toCh) {
             return new Promise(function (resolve) {
               var hinge = cell.querySelector('.flap-hinge');
-              var front = cell.querySelector('.flap-front .flap-char');
-              var back = cell.querySelector('.flap-back .flap-char');
-              if (!hinge || !front || !back) {
-                setStatic(cell, toCh);
+              var front = cell.querySelector('.flap-front .flap-glyph');
+              var back = cell.querySelector('.flap-back .flap-glyph');
+              var top = cell.querySelector('.flap-top .flap-glyph');
+              var bottom = cell.querySelector('.flap-bottom .flap-glyph');
+              if (!hinge || !front || !back || !top || !bottom) {
+                setFull(cell, toCh);
                 resolve();
                 return;
               }
+              // Classic Solari: top stays old, bottom already shows new, card flaps down.
+              top.textContent = fromCh;
+              bottom.textContent = toCh;
               front.textContent = fromCh;
               back.textContent = toCh;
-              setStatic(cell, fromCh);
               hinge.hidden = false;
               hinge.classList.remove('is-flipping');
               void hinge.offsetWidth;
@@ -107,11 +112,11 @@ import MemberDelete from '../components/MemberDelete.astro';
                 done = true;
                 hinge.classList.remove('is-flipping');
                 hinge.hidden = true;
-                setStatic(cell, toCh);
+                setFull(cell, toCh);
                 resolve();
               }
               hinge.addEventListener('animationend', finish, { once: true });
-              setTimeout(finish, 320);
+              setTimeout(finish, 380);
             });
           }
 
@@ -120,17 +125,15 @@ import MemberDelete from '../components/MemberDelete.astro';
               setTimeout(r, delay);
             });
             if (reduce || finalCh === '—') {
-              setStatic(cell, finalCh);
+              setFull(cell, finalCh);
               return;
             }
             var current = DIGITS[Math.floor(Math.random() * 10)];
-            setStatic(cell, current);
-            var spins = 3 + Math.floor(Math.random() * 3);
+            setFull(cell, current);
+            var spins = 4 + Math.floor(Math.random() * 3);
             for (var i = 0; i < spins; i++) {
               var next =
-                i === spins - 1
-                  ? finalCh
-                  : DIGITS[Math.floor(Math.random() * 10)];
+                i === spins - 1 ? finalCh : DIGITS[Math.floor(Math.random() * 10)];
               await flipOnce(cell, current, next);
               current = next;
             }
@@ -147,9 +150,8 @@ import MemberDelete from '../components/MemberDelete.astro';
             el.classList.add('is-flap');
             el.innerHTML =
               '<span class="flap-board">' + chars.map(cellHtml).join('') + '</span>';
-            var cells = el.querySelectorAll('.flap-cell');
-            cells.forEach(function (cell, i) {
-              runCell(cell, chars[i], 90 + i * 110);
+            el.querySelectorAll('.flap-cell').forEach(function (cell, i) {
+              runCell(cell, chars[i], 70 + i * 130);
             });
           }
 
@@ -408,7 +410,7 @@ import MemberDelete from '../components/MemberDelete.astro';
     margin: 0.55rem 0 0;
     color: var(--paper);
     font-family: var(--font-display);
-    font-size: clamp(1.85rem, 4.2vw, 2.45rem);
+    font-size: clamp(1.7rem, 3.8vw, 2.2rem);
     font-weight: 300;
     letter-spacing: -0.02em;
     line-height: 1;
@@ -419,28 +421,41 @@ import MemberDelete from '../components/MemberDelete.astro';
     letter-spacing: 0;
   }
 
+  /* 1970s–80s Solari board: one digit per tile, split through the middle */
   .flap-board {
+    --flap-w: clamp(1.35rem, 3.2vw, 1.7rem);
+    --flap-h: clamp(1.9rem, 4.4vw, 2.35rem);
     display: inline-flex;
-    gap: 0.16rem;
-    align-items: stretch;
+    gap: 0.28rem;
+    align-items: center;
+    padding: 0.28rem 0.32rem;
+    border-radius: 0.18rem;
+    background: linear-gradient(180deg, #2a2118 0%, #15110d 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 220, 170, 0.08),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+      0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   .flap-cell {
     position: relative;
-    display: inline-block;
-    width: 0.72em;
-    height: 1.22em;
-    perspective: 420px;
-    border-radius: 0.1em;
-    border: 1px solid rgba(215, 224, 232, 0.2);
-    background: linear-gradient(180deg, #24303a 0%, #141b22 48%, #0a0e12 52%, #121820 100%);
+    flex: 0 0 var(--flap-w);
+    width: var(--flap-w);
+    height: var(--flap-h);
+    perspective: 600px;
+    border-radius: 0.12rem;
+    border: 1px solid rgba(0, 0, 0, 0.75);
+    background: #0c0b09;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.07),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-      0 1px 2px rgba(0, 0, 0, 0.35);
+      0 0 0 1px rgba(180, 150, 100, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
     overflow: hidden;
-    color: #f3ebe0;
+    color: #f2e2b8;
+    font-family: 'Courier New', 'Lucida Console', ui-monospace, monospace;
+    font-size: calc(var(--flap-h) * 0.62);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
 
   .flap-cell::after {
@@ -449,55 +464,62 @@ import MemberDelete from '../components/MemberDelete.astro';
     left: 0;
     right: 0;
     top: 50%;
-    z-index: 4;
-    height: 1px;
-    background: rgba(0, 0, 0, 0.72);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+    z-index: 6;
+    height: 2px;
+    margin-top: -1px;
+    background: #050403;
+    box-shadow: 0 1px 0 rgba(255, 230, 180, 0.05);
     pointer-events: none;
   }
 
-  .flap-half {
+  .flap-panel {
     position: absolute;
     left: 0;
-    right: 0;
+    width: 100%;
     height: 50%;
     overflow: hidden;
+    background: linear-gradient(180deg, #1c1914 0%, #12100c 100%);
   }
 
   .flap-top {
     top: 0;
+    z-index: 1;
+    border-radius: 0.1rem 0.1rem 0 0;
   }
 
   .flap-bottom {
     bottom: 0;
+    z-index: 1;
+    border-radius: 0 0 0.1rem 0.1rem;
+    background: linear-gradient(180deg, #0e0c0a 0%, #17140f 100%);
   }
 
-  .flap-char {
+  .flap-glyph {
     position: absolute;
     left: 0;
-    right: 0;
+    width: 100%;
+    height: var(--flap-h);
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 200%;
-    font-weight: 500;
+    text-align: center;
     letter-spacing: 0;
-    line-height: 1;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.65);
   }
 
-  .flap-top .flap-char {
+  .flap-top .flap-glyph {
     top: 0;
   }
 
-  .flap-bottom .flap-char {
+  .flap-bottom .flap-glyph {
     bottom: 0;
+    top: auto;
   }
 
   .flap-hinge {
     position: absolute;
     left: 0;
-    right: 0;
+    width: 100%;
     top: 0;
     height: 50%;
     z-index: 5;
@@ -511,27 +533,26 @@ import MemberDelete from '../components/MemberDelete.astro';
     overflow: hidden;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    background: linear-gradient(180deg, #2a3742 0%, #171e26 100%);
+    background: linear-gradient(180deg, #242017 0%, #14110d 100%);
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35);
   }
 
-  .flap-front .flap-char {
+  .flap-front .flap-glyph {
     top: 0;
-    height: 200%;
   }
 
   .flap-back {
     transform: rotateX(180deg);
-    background: linear-gradient(180deg, #10161c 0%, #1c262f 100%);
+    background: linear-gradient(180deg, #0c0b09 0%, #1a1712 100%);
   }
 
-  .flap-back .flap-char {
+  .flap-back .flap-glyph {
     bottom: 0;
     top: auto;
-    height: 200%;
   }
 
   .flap-hinge.is-flipping {
-    animation: looks-flap-flip 0.28s ease-in forwards;
+    animation: looks-flap-flip 0.34s cubic-bezier(0.4, 0.05, 0.7, 1) forwards;
   }
 
   @keyframes looks-flap-flip {
