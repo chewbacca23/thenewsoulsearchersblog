@@ -809,29 +809,22 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     .eyebrow { margin:0 0 .4rem; letter-spacing:.16em; text-transform:uppercase; font-size:.78rem; color:var(--amber); font-weight:700; }
     h1 { margin:0 0 .75rem; font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-weight:300; font-size: clamp(2rem, 4vw, 2.8rem); color:var(--paper); }
     .lead { margin:0 0 1.75rem; color:rgba(215,224,232,.72); }
-    .looks-board { margin:0 0 2.25rem; padding:.55rem .55rem .7rem; border-radius:.2rem; border:1px solid rgba(0,0,0,.85); background:linear-gradient(180deg,rgba(255,220,160,.06),transparent 28%),linear-gradient(180deg,#3a2f24 0%,#1a1510 42%,#100d0a 100%); box-shadow:inset 0 1px 0 rgba(255,230,180,.12),inset 0 -2px 0 rgba(0,0,0,.45); }
-    .looks-board-mark { margin:0 0 .45rem .15rem; color:rgba(242,226,184,.55); font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:.62rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase; }
-    .looks-board-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.35rem; }
+    .looks-board { margin:0 0 2.25rem; padding:.85rem .75rem 1rem; border-radius:.55rem; background:#141414; border:1px solid #0a0a0a; box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 28px rgba(0,0,0,.45); }
+    .looks-board-mark { margin:0 0 .75rem; color:#f5f5f5; font-family:Helvetica,Arial,sans-serif; font-size:.95rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase; text-align:center; }
+    .looks-board-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.55rem; }
     @media (max-width:719px) { .looks-board-row { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    .looks-bay { display:flex; flex-direction:column; align-items:center; gap:.4rem; min-width:0; padding:.45rem .3rem .55rem; border-radius:.12rem; border:1px solid rgba(0,0,0,.55); background:linear-gradient(180deg,#221c16 0%,#14110d 100%); }
-    .looks-bay-label { margin:0; color:#e6d3a2; font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:.58rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; text-align:center; white-space:nowrap; }
-    .card-num { margin:0; color:#f2e2b8; font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:clamp(1.7rem,3.8vw,2.2rem); font-weight:700; letter-spacing:0; line-height:1; font-variant-numeric:tabular-nums; }
-    .card-num.is-flap { letter-spacing:0; }
-    .flap-board { --flap-w:clamp(1.2rem,2.6vw,1.45rem); --flap-h:clamp(1.7rem,3.8vw,2.05rem); display:inline-flex; gap:.14rem; align-items:center; justify-content:center; }
-    .flap-cell { position:relative; flex:0 0 var(--flap-w); width:var(--flap-w); height:var(--flap-h); perspective:600px; border-radius:.12rem; border:1px solid rgba(0,0,0,.75); background:#0c0b09; box-shadow:0 0 0 1px rgba(180,150,100,.18); overflow:hidden; color:#f2e2b8; font-family:"Courier New","Lucida Console",ui-monospace,monospace; font-size:calc(var(--flap-h)*.62); font-weight:700; line-height:1; }
-    .flap-cell::after { content:""; position:absolute; left:0; right:0; top:50%; z-index:6; height:2px; margin-top:-1px; background:#050403; pointer-events:none; }
-    .flap-panel { position:absolute; left:0; width:100%; height:50%; overflow:hidden; background:linear-gradient(180deg,#1c1914 0%,#12100c 100%); }
-    .flap-top { top:0; z-index:1; } .flap-bottom { bottom:0; z-index:1; background:linear-gradient(180deg,#0e0c0a 0%,#17140f 100%); }
-    .flap-glyph { position:absolute; left:0; width:100%; height:var(--flap-h); display:flex; align-items:center; justify-content:center; text-shadow:0 1px 0 rgba(0,0,0,.65); }
-    .flap-top .flap-glyph { top:0; } .flap-bottom .flap-glyph { bottom:0; top:auto; }
-    .flap-hinge { position:absolute; left:0; width:100%; top:0; height:50%; z-index:5; transform-origin:50% 100%; transform-style:preserve-3d; }
-    .flap-face { position:absolute; inset:0; overflow:hidden; backface-visibility:hidden; -webkit-backface-visibility:hidden; background:linear-gradient(180deg,#242017 0%,#14110d 100%); }
-    .flap-front .flap-glyph { top:0; }
-    .flap-back { transform:rotateX(180deg); background:linear-gradient(180deg,#0c0b09 0%,#1a1712 100%); }
-    .flap-back .flap-glyph { bottom:0; top:auto; }
-    .flap-hinge.is-flipping { animation:looks-flap-flip .34s cubic-bezier(.4,.05,.7,1) forwards; }
-    @keyframes looks-flap-flip { from { transform:rotateX(0deg); } to { transform:rotateX(-180deg); } }
-    @media (prefers-reduced-motion:reduce) { .flap-hinge.is-flipping { animation:none; } }
+    .looks-bay { display:flex; flex-direction:column; align-items:center; gap:.45rem; min-width:0; overflow:hidden; }
+    .looks-bay-label { margin:0; color:#e0b84e; font-family:Helvetica,Arial,sans-serif; font-size:.62rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; text-align:center; }
+    .card-num { margin:0; max-width:100%; overflow:hidden; color:#fff; font-family:Helvetica,Arial,sans-serif; font-size:1.25rem; font-weight:700; line-height:1; }
+    .card-num.is-solari { display:flex; justify-content:center; }
+    .solari-row { display:inline-flex; gap:3px; align-items:center; justify-content:center; max-width:100%; }
+    .solari-flap { position:relative; flex:0 0 auto; width:22px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:3px; background:linear-gradient(180deg,#2a2a2a 0%,#1a1a1a 48%,#0d0d0d 52%,#171717 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -1px 0 rgba(0,0,0,.55); overflow:hidden; perspective:240px; }
+    .solari-flap::after { content:""; position:absolute; left:0; right:0; top:50%; z-index:2; height:2px; margin-top:-1px; background:#000; pointer-events:none; }
+    .solari-flap-text { position:relative; z-index:1; color:#f7f7f7; font-family:Helvetica,Arial,sans-serif; font-size:18px; font-weight:800; line-height:1; transform-origin:50% 50%; }
+    .solari-flap.is-flipping .solari-flap-text { animation:solari-tick .3s ease-in-out; }
+    @keyframes solari-tick { 0%{transform:rotateX(0)} 45%{transform:rotateX(-90deg)} 55%{transform:rotateX(-90deg)} 100%{transform:rotateX(0)} }
+    @media (max-width:719px) { .solari-flap{width:18px;height:28px} .solari-flap-text{font-size:15px} }
+    @media (prefers-reduced-motion:reduce) { .solari-flap.is-flipping .solari-flap-text{animation:none} }
     h2 { margin:2.35rem 0 .55rem; padding:0; font-family:"Sofia Sans Extra Condensed","Arial Narrow",sans-serif; font-size:1.15rem; font-weight:300; letter-spacing:.06em; text-transform:uppercase; }
     ol { margin:0; padding:0; list-style:none; border:1px solid rgba(215,224,232,.14); border-radius:0; overflow:hidden; background:rgba(8,12,17,.4); }
     li { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1rem; align-items:baseline; padding:.72rem .95rem; border-top:1px solid rgba(215,224,232,.09); font-variant-numeric:tabular-nums; }
@@ -864,7 +857,7 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     <h1>Looks</h1>
     <p class="lead">Opens per page, day, week, and month — Berlin calendar. No names. Private for you.</p>
     <div class="looks-board" role="group" aria-label="Summary counts">
-      <p class="looks-board-mark" aria-hidden="true">Looks · Berlin</p>
+      <p class="looks-board-mark" aria-hidden="true">Looks</p>
       <div class="looks-board-row">
         <article class="looks-bay"><p class="looks-bay-label">Today</p><p class="card-num" data-looks="today">${today}</p></article>
         <article class="looks-bay"><p class="looks-bay-label">7 days</p><p class="card-num" data-looks="week">${week}</p></article>
@@ -906,7 +899,7 @@ export function looksDashboardPage(summary, members = [], shares = []) {
     <p class="back"><a href="/">← Home</a> · <a href="/admin/">Editor</a></p>
   </main>
   <script>
-  (function(){var D='0123456789',reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;function parseTarget(raw){var t=String(raw||'').trim();if(!t||t==='—'||t==='-'||t==='–')return null;var d=t.replace(/[^\\d]/g,'');if(!d)return null;return d.replace(/^0+(?=\\d)/,'')||'0';}function cellHtml(ch){return '<span class="flap-cell" aria-hidden="true"><span class="flap-panel flap-top"><span class="flap-glyph">'+ch+'</span></span><span class="flap-panel flap-bottom"><span class="flap-glyph">'+ch+'</span></span><span class="flap-hinge" hidden><span class="flap-face flap-front"><span class="flap-glyph"></span></span><span class="flap-face flap-back"><span class="flap-glyph"></span></span></span></span>';}function setFull(cell,ch){var top=cell.querySelector('.flap-top .flap-glyph'),bottom=cell.querySelector('.flap-bottom .flap-glyph');if(top)top.textContent=ch;if(bottom)bottom.textContent=ch;}function flipOnce(cell,fromCh,toCh){return new Promise(function(resolve){var hinge=cell.querySelector('.flap-hinge'),front=cell.querySelector('.flap-front .flap-glyph'),back=cell.querySelector('.flap-back .flap-glyph'),top=cell.querySelector('.flap-top .flap-glyph'),bottom=cell.querySelector('.flap-bottom .flap-glyph');if(!hinge||!front||!back||!top||!bottom){setFull(cell,toCh);resolve();return;}top.textContent=fromCh;bottom.textContent=toCh;front.textContent=fromCh;back.textContent=toCh;hinge.hidden=false;hinge.classList.remove('is-flipping');void hinge.offsetWidth;hinge.classList.add('is-flipping');var done=false;function finish(){if(done)return;done=true;hinge.classList.remove('is-flipping');hinge.hidden=true;setFull(cell,toCh);resolve();}hinge.addEventListener('animationend',finish,{once:true});setTimeout(finish,380);});}async function runCell(cell,finalCh,delay){await new Promise(function(r){setTimeout(r,delay);});if(reduce||finalCh==='—'){setFull(cell,finalCh);return;}var current=D[Math.floor(Math.random()*10)];setFull(cell,current);var spins=4+Math.floor(Math.random()*3);for(var i=0;i<spins;i++){var next=i===spins-1?finalCh:D[Math.floor(Math.random()*10)];await flipOnce(cell,current,next);current=next;}if(current!==finalCh)await flipOnce(cell,current,finalCh);}function mount(el){if(!el||el.dataset.flapReady==='1'||!el.classList.contains('card-num'))return;var target=parseTarget(el.textContent);var chars=target?target.split(''):['—'];el.dataset.flapReady='1';el.setAttribute('aria-label',target||'—');el.classList.add('is-flap');el.innerHTML='<span class="flap-board">'+chars.map(cellHtml).join('')+'</span>';el.querySelectorAll('.flap-cell').forEach(function(cell,i){runCell(cell,chars[i],70+i*130);});}document.querySelectorAll('.card-num[data-looks]').forEach(mount);})();
+  (function(){var D='0123456789',reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;function parseTarget(raw){var t=String(raw||'').trim();if(!t||t==='—'||t==='-'||t==='–')return null;var d=t.replace(/[^\\d]/g,'');if(!d)return null;return (d.replace(/^0+(?=\\d)/,'')||'0').slice(0,5);}function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}function flapHtml(ch){return '<span class="solari-flap" aria-hidden="true"><span class="solari-flap-text">'+ch+'</span></span>';}async function flipTo(flap,toCh){var text=flap.querySelector('.solari-flap-text');if(!text)return;if(reduce){text.textContent=toCh;return;}flap.classList.remove('is-flipping');void flap.offsetWidth;flap.classList.add('is-flipping');await wait(140);text.textContent=toCh;await wait(160);flap.classList.remove('is-flipping');}async function runFlap(flap,finalCh,delay){await wait(delay);var text=flap.querySelector('.solari-flap-text');if(!text)return;if(reduce||finalCh==='—'){text.textContent=finalCh;return;}var spins=3+Math.floor(Math.random()*3);for(var i=0;i<spins;i++){var next=i===spins-1?finalCh:D[Math.floor(Math.random()*10)];await flipTo(flap,next);}if(text.textContent!==finalCh)await flipTo(flap,finalCh);}function mount(el){if(!el||el.dataset.flapReady==='1'||!el.classList.contains('card-num'))return;var target=parseTarget(el.textContent);var chars=target?target.split(''):['—'];el.dataset.flapReady='1';el.setAttribute('aria-label',target||'—');el.classList.add('is-solari');el.innerHTML='<span class="solari-row">'+chars.map(flapHtml).join('')+'</span>';el.querySelectorAll('.solari-flap').forEach(function(flap,i){runFlap(flap,chars[i],60+i*90);});}document.querySelectorAll('.card-num[data-looks]').forEach(mount);})();
   </script>
 </body>
 </html>`,
