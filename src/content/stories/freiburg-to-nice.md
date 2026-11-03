@@ -3,8 +3,7 @@ title: "Freiburg to Nice: Four Grown Men, Ten Days, One Very Expensive Coffee"
 pubDate: 2026-10-30
 headline: "Freiburg to Nice: Four Grown Men, Ten Days, One Very Expensive Coffee"
 description: Four friends, Freiburg to Café du Cycliste in Nice. Canals, Saône,
-  Rhône, Mistral at our backs — and maybe a borrowed Cervélo. Ten days, then
-  coffee.
+  Rhône, Mistral at our backs. Ten days, then coffee.
 draft: false
 cover: /stories/img_5966.jpeg
 gallery:
@@ -23,7 +22,7 @@ The pace is a cool 25 km/h on a good day with good legs and good weather. That�
 
 Then comes the part we’re really looking forward to: the Rhône delta, with the Mistral at our backs. That’s the wind that blows from the north and pushes you south like a very enthusiastic friend. We know it’s sometimes fierce and unpredictable, and might also blow our hats off, but we’ll take it. Tailwind is just the universe saying “keep going, you fools.”
 
-Meanwhile we’ve asked Cervélo whether they’d lend us bikes for the trip. It’s in the works, which is the polite way of saying “we asked and nobody has said no yet.” We’d borrow them, not keep them, so please nobody panic. We’ll treat them like newborns, bring them back clean, and maybe slightly happier than we found them. If it doesn’t work out, we’ll ride our own bikes, which we love anyway, so don’t tell them.
+We’ll ride our own bikes — the ones we already love — and treat the kilometres like they matter.
 
 On day ten we roll into Nice a bit tired, a bit sunburnt and extremely smug. The bikes get leaned carefully against the wall of the Café du Cycliste, the first coffee is ordered, and for a short, glorious moment, the coffee costs more than the whole train ticket. Worth it.
 
