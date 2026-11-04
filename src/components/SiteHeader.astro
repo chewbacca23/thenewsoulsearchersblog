@@ -1,6 +1,8 @@
 ---
+import { getCollection } from 'astro:content';
 import { site } from '../site.config';
 import BrandMark from './BrandMark.astro';
+import { anyFresh } from '../lib/fresh';
 import { instagramBind } from '../lib/instagram';
 import settings from '../content/settings/instagram.json';
 
@@ -8,30 +10,46 @@ const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isHome = pathname === '/';
 const instagram = instagramBind(settings);
 
-type NavLink = { href: string; label: string; match?: string; private?: boolean };
+const [rides, weeks, calendar, stores] = await Promise.all([
+  getCollection('stories', ({ data }) => !data.draft),
+  getCollection('week', ({ data }) => !data.draft),
+  getCollection('calendar', ({ data }) => !data.draft),
+  getCollection('stores', ({ data }) => !data.draft),
+]);
+
+const freshNav = {
+  rides: anyFresh(rides.map((entry) => entry.data.pubDate)),
+  week: anyFresh(weeks.map((entry) => entry.data.pubDate)),
+  calendar: anyFresh(calendar.map((entry) => entry.data.posted)),
+  stores: anyFresh(stores.map((entry) => entry.data.posted)),
+};
+
+type NavLink = { href: string; label: string; match?: string; private?: boolean; fresh?: boolean };
 type NavItem =
-  | { type: 'link'; href: string; label: string; match?: string; private?: boolean }
-  | { type: 'group'; label: string; children: NavLink[] };
+  | { type: 'link'; href: string; label: string; match?: string; private?: boolean; fresh?: boolean }
+  | { type: 'group'; label: string; children: NavLink[]; fresh?: boolean };
 
 const items: NavItem[] = [
   { type: 'link', href: '/', label: 'Home' },
-  { type: 'link', href: '/stories', label: 'Rides' },
+  { type: 'link', href: '/stories', label: 'Rides', fresh: freshNav.rides },
   {
     type: 'group',
     label: 'Trail',
+    fresh: freshNav.week || freshNav.calendar,
     children: [
       { href: '/postcard', label: 'Postcards', match: '/postcard' },
       { href: '/stood', label: 'Where I stood' },
-      { href: '/week', label: 'This week' },
-      { href: '/calendar', label: 'Berlin calendar' },
+      { href: '/week', label: 'This week', fresh: freshNav.week },
+      { href: '/calendar', label: 'Berlin calendar', fresh: freshNav.calendar },
     ],
   },
   {
     type: 'group',
     label: 'Places',
+    fresh: freshNav.stores,
     children: [
       { href: '/cities', label: 'Cities', match: '/cities' },
-      { href: '/stores', label: 'Stores' },
+      { href: '/stores', label: 'Stores', fresh: freshNav.stores },
       { href: '/friends', label: 'Friends' },
       { href: '/members', label: 'Members', private: true },
     ],
@@ -72,13 +90,21 @@ function groupActive(children: NavLink[]) {
           item.type === 'link' ? (
             <a
               href={item.href}
-              class:list={['nav-link', { active: linkActive(item.href, item.match) }]}
+              class:list={[
+                'nav-link',
+                { active: linkActive(item.href, item.match), 'is-new': !!item.fresh },
+              ]}
               aria-current={linkActive(item.href, item.match) ? 'page' : undefined}
             >
               {item.label}
             </a>
           ) : (
-            <details class:list={['nav-drop', { active: groupActive(item.children) }]}>
+            <details
+              class:list={[
+                'nav-drop',
+                { active: groupActive(item.children), 'is-new': !!item.fresh },
+              ]}
+            >
               <summary class="nav-link nav-drop-summary">
                 {item.label}
                 <span class="nav-drop-caret" aria-hidden="true"></span>
@@ -89,7 +115,11 @@ function groupActive(children: NavLink[]) {
                     href={child.href}
                     class:list={[
                       'nav-drop-link',
-                      { active: linkActive(child.href, child.match), 'nav-drop-link--private': child.private },
+                      {
+                        active: linkActive(child.href, child.match),
+                        'nav-drop-link--private': child.private,
+                        'is-new': !!child.fresh,
+                      },
                     ]}
                     aria-current={linkActive(child.href, child.match) ? 'page' : undefined}
                     title={child.private ? 'Private for you' : undefined}
@@ -536,6 +566,20 @@ function groupActive(children: NavLink[]) {
   .nav-link.active,
   .nav-drop.active > .nav-drop-summary {
     color: var(--amber-hot);
+  }
+
+  /* New for 5 days — crest red so people know where to look. */
+  .nav-link.is-new,
+  .nav-drop.is-new > .nav-drop-summary,
+  .nav-drop-link.is-new {
+    color: var(--crest-red);
+  }
+
+  .nav-link.is-new:hover,
+  .nav-drop.is-new:hover > .nav-drop-summary,
+  .nav-drop-link.is-new:hover,
+  .nav-drop-link.is-new.active {
+    color: #ff4a52;
   }
 
   .nav-drop {

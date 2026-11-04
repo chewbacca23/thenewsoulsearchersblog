@@ -43,7 +43,7 @@ collections:
       preview: false
     fields:
       - { label: Name of this ride, name: title, widget: string, hint: "The name. + Ride asks for this first." }
-      - { label: Date, name: pubDate, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", hint: "Newest date shows first on the site" }
+      - { label: Date, name: pubDate, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", hint: "Newest first. Title stays red for 5 days so people spot a new ride." }
       - { label: Headline, name: headline, widget: string, required: false, hint: "Usually the same as the name. Shows on the ride tile." }
       - { label: Short intro, name: description, widget: text, required: false, hint: "A few lines under the name on the ride page." }
       - { label: Ride text, name: body, widget: markdown, required: false, hint: "The story. Photos below land between paragraphs — or use the picture button while typing." }
@@ -208,6 +208,7 @@ collections:
       - { label: Name, name: name, widget: string, hint: "Shop name." }
       - { label: City, name: city, widget: string, hint: "Like Berlin." }
       - { label: Country, name: country, widget: string, hint: "Like Germany." }
+      - { label: Added to the site, name: posted, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false, hint: "Leave blank — we fill today on save. Name stays red for 5 days." }
       - { label: Short note, name: note, widget: text, required: false, hint: "Why this shop fits Soul Searchers. A few lines." }
       - { label: Website, name: url, widget: string, required: false, hint: "Optional. Full link, like https://…" }
       - { label: Draft, name: draft, widget: boolean, default: false, required: false, hint: "Optional. On = hidden until you turn it off." }
@@ -243,7 +244,7 @@ collections:
       preview: false
     fields:
       - { label: Title, name: title, widget: string, hint: "One line. Like Berlin outskirts before the rain." }
-      - { label: Date, name: pubDate, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", hint: "Newest date shows first." }
+      - { label: Date, name: pubDate, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", hint: "Newest first. Title stays red for 5 days so people spot a new note." }
       - { label: What happened, name: note, widget: text, required: false, hint: "A short note. Not a long journal post." }
       - { label: Draft, name: draft, widget: boolean, default: false, required: false, hint: "Optional. On = hidden until you turn it off." }
       - label: UPLOAD PHOTOS — week shots (thumbs sit on the right of the note)
@@ -286,7 +287,7 @@ collections:
   - name: calendar
     label: Berlin calendar
     label_singular: Calendar date
-    description: Club rides, open floors, and race watches in Berlin. Shows on Berlin calendar. People come back for what is next.
+    description: Club rides, open floors, and race watches in Berlin. Shows on Berlin calendar. New dates stay red for 5 days so people spot them.
     folder: src/content/calendar
     create: true
     delete: true
@@ -299,6 +300,7 @@ collections:
       preview: false
     fields:
       - { label: Title, name: title, widget: string, hint: "Like Rapha Saturday ride or Giro opening weekend watch." }
+      - { label: Added to the site, name: posted, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false, hint: "Leave blank — we fill today on save. Title stays red for 5 days." }
       - { label: Date, name: start, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", hint: "The day it happens." }
       - { label: End date, name: end, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", required: false, hint: "Optional. For a weekend or a stage week." }
       - { label: Time, name: when, widget: string, required: false, hint: "Like 09:00 or Afternoon stages." }

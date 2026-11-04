@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { isFresh } from '../lib/fresh';
 
 const entries = (await getCollection('calendar', ({ data }) => !data.draft)).sort(
   (a, b) => a.data.start.getTime() - b.data.start.getTime(),
@@ -101,8 +102,11 @@ function groupByDay(list: typeof upcoming) {
                         <time datetime={day}>{dayFmt.format(new Date(`${day}T12:00:00`))}</time>
                       </h3>
                       <ul class="cal-list">
-                        {dayEntries.map((entry) => (
-                          <li class="cal-card" data-kind={entry.data.kind}>
+                        {dayEntries.map((entry) => {
+                          const fresh = isFresh(entry.data.posted);
+                          return (
+                          <li class:list={['cal-card', { 'is-new': fresh }]} data-kind={entry.data.kind}>
+                            {fresh ? <p class="mark-new">New</p> : null}
                             <p class="cal-kind">{kindLabel[entry.data.kind] ?? 'On the calendar'}</p>
                             <h4 class="cal-title">
                               {entry.data.url ? (
@@ -118,7 +122,8 @@ function groupByDay(list: typeof upcoming) {
                             </p>
                             {entry.data.note ? <p class="cal-note">{entry.data.note}</p> : null}
                           </li>
-                        ))}
+                          );
+                        })}
                       </ul>
                     </li>
                   ))}
@@ -131,8 +136,11 @@ function groupByDay(list: typeof upcoming) {
                 <section class="cal-block" aria-labelledby="cal-later">
                   <h2 id="cal-later" class="cal-heading">Coming up</h2>
                   <ol class="cal-list cal-list--flat">
-                    {later.map((entry) => (
-                      <li class="cal-card" data-kind={entry.data.kind}>
+                    {later.map((entry) => {
+                      const fresh = isFresh(entry.data.posted);
+                      return (
+                      <li class:list={['cal-card', { 'is-new': fresh }]} data-kind={entry.data.kind}>
+                        {fresh ? <p class="mark-new">New</p> : null}
                         <p class="cal-when">
                           <time datetime={entry.data.start.toISOString().slice(0, 10)}>
                             {dateLine(entry.data.start, entry.data.end)}
@@ -154,7 +162,8 @@ function groupByDay(list: typeof upcoming) {
                         </p>
                         {entry.data.note ? <p class="cal-note">{entry.data.note}</p> : null}
                       </li>
-                    ))}
+                      );
+                    })}
                   </ol>
                 </section>
               ) : null
@@ -333,6 +342,24 @@ function groupByDay(list: typeof upcoming) {
 
   .cal-title a:hover {
     color: var(--amber-hot);
+  }
+
+  .cal-card.is-new .cal-title,
+  .cal-card.is-new .cal-title a {
+    color: var(--crest-red);
+  }
+
+  .cal-card.is-new .cal-title a:hover {
+    color: #ff4a52;
+  }
+
+  .cal-card .mark-new {
+    margin: 0 0 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--crest-red);
   }
 
   .cal-meta {

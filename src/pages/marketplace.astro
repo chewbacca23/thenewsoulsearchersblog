@@ -1423,7 +1423,7 @@ import { site } from '../site.config';
         .catch(function () {});
     }
 
-    var FRESH_MS = 3 * 24 * 60 * 60 * 1000;
+    var FRESH_MS = 5 * 24 * 60 * 60 * 1000;
 
     function isFresh(at) {
       var stamp = Date.parse(String(at || ''));

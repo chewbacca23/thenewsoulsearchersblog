@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { isFresh } from '../lib/fresh';
 import { existingMedia } from '../lib/media';
 import { newestFirst } from '../lib/newest';
 
@@ -39,6 +40,7 @@ const dateFmt = new Intl.DateTimeFormat('en', {
           <ol class="week-list">
             {entries.map((entry, index) => {
               const gallery = existingMedia(entry.data.photos);
+              const fresh = isFresh(entry.data.pubDate);
               const delayClass =
                 index === 0 ? 'reveal reveal-delay-2' : index === 1 ? 'reveal reveal-delay-3' : 'reveal';
               const galleryClass =
@@ -46,8 +48,9 @@ const dateFmt = new Intl.DateTimeFormat('en', {
                   ? 'week-gallery week-gallery--many'
                   : 'week-gallery';
               return (
-                <li class:list={['week-entry', delayClass]}>
+                <li class:list={['week-entry', delayClass, { 'is-new': fresh }]}>
                   <div class="week-main">
+                    {fresh ? <p class="mark-new">New</p> : null}
                     <time class="week-date" datetime={entry.data.pubDate.toISOString().slice(0, 10)}>
                       {dateFmt.format(entry.data.pubDate)}
                     </time>
@@ -232,6 +235,19 @@ const dateFmt = new Intl.DateTimeFormat('en', {
   .week-title {
     margin: 0.4rem 0 0;
     font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+  }
+
+  .week-entry.is-new .week-title {
+    color: var(--crest-red);
+  }
+
+  .week-entry .mark-new {
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--crest-red);
   }
 
   .week-note {

@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { slugifyCityName } from '../lib/cities';
+import { isFresh } from '../lib/fresh';
 import { existingMedia } from '../lib/media';
 
 const stores = (await getCollection('stores', ({ data }) => !data.draft)).sort((a, b) => {
@@ -35,6 +36,7 @@ const stores = (await getCollection('stores', ({ data }) => !data.draft)).sort((
               const gallery = existingMedia(photos);
               const cover = gallery[0];
               const citySlug = slugifyCityName(city);
+              const fresh = isFresh(store.data.posted);
               const NameTag = url ? 'a' : 'span';
               const nameProps = url
                 ? { href: url, target: '_blank', rel: 'noopener noreferrer' }
@@ -42,8 +44,9 @@ const stores = (await getCollection('stores', ({ data }) => !data.draft)).sort((
               const delayClass =
                 index === 0 ? 'reveal reveal-delay-2' : index === 1 ? 'reveal reveal-delay-3' : 'reveal';
               return (
-                <li class:list={['store', delayClass]}>
+                <li class:list={['store', delayClass, { 'is-new': fresh }]}>
                   <div class="store-copy">
+                    {fresh ? <p class="mark-new">New</p> : null}
                     <NameTag class="store-name" {...nameProps}>
                       {name}
                     </NameTag>
@@ -306,6 +309,23 @@ const stores = (await getCollection('stores', ({ data }) => !data.draft)).sort((
 
   a.store-name:hover {
     color: var(--amber-hot);
+  }
+
+  .store.is-new .store-name {
+    color: var(--crest-red);
+  }
+
+  .store.is-new a.store-name:hover {
+    color: #ff4a52;
+  }
+
+  .store .mark-new {
+    margin: 0 0 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--crest-red);
   }
 
   .store-place {

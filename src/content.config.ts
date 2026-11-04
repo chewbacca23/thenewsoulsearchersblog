@@ -122,6 +122,8 @@ const stores = defineCollection({
       /** @deprecated Prefer `photos`. Kept so older single-photo stores still build. */
       photo: z.string().optional(),
       photos: z.array(galleryItem).max(STORE_PHOTO_MAX).optional().default([]),
+      /** Day you put it on the site — name stays red for 5 days. */
+      posted: z.coerce.date().optional(),
       order: z.number().optional().default(0),
       draft: z.boolean().default(false),
     })
@@ -203,6 +205,8 @@ const calendar = defineCollection({
       title: z.string(),
       start: z.coerce.date(),
       end: z.coerce.date().optional(),
+      /** Day you put it on the site — title stays red for 5 days. */
+      posted: z.coerce.date().optional(),
       when: z.string().optional().default(''),
       kind: z.enum(['club', 'watch', 'open', 'other']).default('club'),
       host: z.string().optional().default(''),
