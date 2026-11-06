@@ -1041,9 +1041,10 @@ export function looksBarsHtml(bars, emptyText, opts = {}) {
     'font-weight:300;font-size:0.82rem;letter-spacing:0.02em;font-variant-numeric:tabular-nums;line-height:1';
 
   // Stock-ticker line through bar tops (viewBox 0–100; y=0 is peak).
+  // x sits in the middle of each column slot — not stretched edge-to-edge.
   const pts = list.map((row, i) => {
     const looks = Number(row.looks) || 0;
-    const x = n === 1 ? 50 : (i / (n - 1)) * 100;
+    const x = ((i + 0.5) / n) * 100;
     const y = 100 - (looks / max) * 100;
     return { x, y, looks };
   });

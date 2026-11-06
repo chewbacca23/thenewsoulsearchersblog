@@ -211,6 +211,22 @@ describe('looksBarsHtml', () => {
     assert.match(html, /border-radius:50%/);
     assert.match(html, /rgba\(212,163,90,0\.38\)/);
   });
+
+  it('puts each stock-ticker dot in the middle of its column', () => {
+    const html = looksBarsHtml(
+      [
+        { label: 'Mon', looks: 2 },
+        { label: 'Tue', looks: 4 },
+        { label: 'Wed', looks: 3 },
+      ],
+      'empty',
+    );
+    // Three equal slots → centers at 16.67%, 50%, 83.33%
+    assert.match(html, /left:16\.67%/);
+    assert.match(html, /left:50\.00%/);
+    assert.match(html, /left:83\.33%/);
+    assert.match(html, /points="16\.67,[^"]+ 50\.00,[^"]+ 83\.33,/);
+  });
 });
 
 describe('sanitizeFrom', () => {
