@@ -10,10 +10,13 @@ import BrandMark from '../components/BrandMark.astro';
 import { site } from '../site.config';
 import homeSettings from '../content/settings/home.json';
 
-const [shots, stories] = await Promise.all([
+const [shots, stories, pulses] = await Promise.all([
   getCollection('shots', ({ data }) => !data.draft),
   getCollection('stories', ({ data }) => !data.draft),
+  getCollection('pulse', ({ data }) => !data.draft),
 ]);
+
+const pulseTease = newestFirst(pulses, (entry) => entry.data.pubDate).slice(0, 3);
 
 const ridesNewest = newestFirst(
   stories,
@@ -174,9 +177,110 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
       </div>
     </div>
   </section>
+
+  <section class="section pulse-tease-section" aria-label="Thin tires">
+    <div class="site-shell pulse-tease">
+      <div class="pulse-tease-head">
+        <p class="eyebrow">Thin tires</p>
+        <a class="pulse-tease-all" href="/pulse">All the pulse</a>
+      </div>
+      <p class="pulse-tease-lead">Road news from the thin-tire world — refreshed every few days.</p>
+      <ol class="pulse-tease-list" data-pulse-tease>
+        {
+          pulseTease.length === 0 ? (
+            <li class="empty">
+              <a href="/pulse">Thin tires</a> — road news when it lands.
+            </li>
+          ) : (
+            pulseTease.map((entry) => (
+              <li class="pulse-tease-item">
+                {entry.data.url ? (
+                  <a href={entry.data.url} target="_blank" rel="noopener noreferrer">
+                    {entry.data.title}
+                  </a>
+                ) : (
+                  <span>{entry.data.title}</span>
+                )}
+                {entry.data.source ? (
+                  <span class="pulse-tease-source">{entry.data.source}</span>
+                ) : null}
+              </li>
+            ))
+          )
+        }
+      </ol>
+    </div>
+  </section>
 </BaseLayout>
 
 <style>
+  .pulse-tease-section {
+    padding-top: 2.5rem;
+    padding-bottom: 3.5rem;
+    border-top: 1px solid rgba(215, 224, 232, 0.08);
+  }
+
+  .pulse-tease {
+    max-width: 42rem;
+  }
+
+  .pulse-tease-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .pulse-tease-head .eyebrow {
+    margin: 0;
+  }
+
+  .pulse-tease-all {
+    color: var(--amber-hot);
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .pulse-tease-lead {
+    margin: 0 0 1.1rem;
+    color: rgba(215, 224, 232, 0.72);
+  }
+
+  .pulse-tease-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .pulse-tease-item {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .pulse-tease-item a {
+    color: var(--paper);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+
+  .pulse-tease-item a:hover {
+    color: var(--amber-hot);
+  }
+
+  .pulse-tease-source {
+    color: var(--amber);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
   .hero {
     position: relative;
     min-height: calc(100vh - 4.25rem);

@@ -226,6 +226,28 @@ const calendar = defineCollection({
     })),
 });
 
+const pulse = defineCollection({
+  loader: glob({ base: './src/content/pulse', pattern: '**/*.{md,mdx}' }),
+  schema: z
+    .object({
+      title: z.string(),
+      pubDate: z.coerce.date(),
+      source: z.string().optional().default(''),
+      url: z.string().optional().default(''),
+      image: z.string().optional().default(''),
+      note: z.string().optional().default(''),
+      draft: z.boolean().default(false),
+    })
+    .transform((data) => ({
+      ...data,
+      title: data.title.trim(),
+      source: data.source.trim(),
+      url: data.url.trim(),
+      image: data.image.trim(),
+      note: data.note.trim(),
+    })),
+});
+
 /** Public wall of postcard sends. First name only. No emails. */
 const postcardWall = defineCollection({
   loader: glob({ base: './src/content/postcard-wall', pattern: '**/*.{md,mdx}' }),
@@ -257,5 +279,6 @@ export const collections = {
   week,
   stood,
   calendar,
+  pulse,
   postcardWall,
 };

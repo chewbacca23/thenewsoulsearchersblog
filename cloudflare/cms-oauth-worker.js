@@ -40,6 +40,11 @@ import { handleRemarksRequest } from './kind-remarks.js';
 import { handleMembersRequest } from './member-mail.js';
 import { handlePostcardSharesRequest } from './postcard-shares.js';
 import { handleStoodPlacesRequest } from './stood-places.js';
+import {
+  applyPulseToAsset,
+  handlePulseRequest,
+  runPulseCron,
+} from './thin-tires-pulse.js';
 
 const PROVIDER = 'github';
 const SCOPE = 'public_repo,user';
@@ -429,6 +434,18 @@ async function handleCallback(url, creds) {
 
 export default {
   /**
+   * Thin tires pulse — every 3rd calendar day at 06:00 UTC.
+   * @param {ScheduledController} controller
+   * @param {Record<string, unknown>} env
+   * @param {ExecutionContext} ctx
+   */
+  async scheduled(controller, env, ctx) {
+    const job = runPulseCron(env);
+    if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(job);
+    else await job;
+  },
+
+  /**
    * @param {Request} request
    * @param {{ ASSETS?: { fetch: (request: Request) => Promise<Response> }, GITHUB_OAUTH_CLIENT_ID?: string, GITHUB_OAUTH_CLIENT_SECRET?: string, GITHUB_CLIENT_ID?: string, GITHUB_CLIENT_SECRET?: string }} env
    */
@@ -437,6 +454,9 @@ export default {
       const url = new URL(request.url);
 
       if (url.pathname === '/cms-status') return await statusPage(env);
+
+      const pulseApi = await handlePulseRequest(request, env);
+      if (pulseApi) return pulseApi;
 
       const kit = await handleKitRoom(request, env);
       if (kit) return kit;
@@ -496,8 +516,15 @@ export default {
       if (env.ASSETS) {
         const asset = await env.ASSETS.fetch(request);
         try {
-          const filled = await applyLooksToAsset(request, env, asset);
-          return filled || asset;
+          let next = asset;
+          try {
+            const withPulse = await applyPulseToAsset(request, env, next);
+            if (withPulse) next = withPulse;
+          } catch {
+            /* keep asset */
+          }
+          const filled = await applyLooksToAsset(request, env, next);
+          return filled || next;
         } catch {
           return asset;
         }

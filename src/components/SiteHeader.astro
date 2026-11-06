@@ -10,11 +10,12 @@ const pathname = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isHome = pathname === '/';
 const instagram = instagramBind(settings);
 
-const [rides, weeks, calendar, stores] = await Promise.all([
+const [rides, weeks, calendar, stores, pulses] = await Promise.all([
   getCollection('stories', ({ data }) => !data.draft),
   getCollection('week', ({ data }) => !data.draft),
   getCollection('calendar', ({ data }) => !data.draft),
   getCollection('stores', ({ data }) => !data.draft),
+  getCollection('pulse', ({ data }) => !data.draft),
 ]);
 
 const freshNav = {
@@ -22,6 +23,7 @@ const freshNav = {
   week: anyFresh(weeks.map((entry) => entry.data.pubDate)),
   calendar: anyFresh(calendar.map((entry) => entry.data.posted)),
   stores: anyFresh(stores.map((entry) => entry.data.posted)),
+  pulse: anyFresh(pulses.map((entry) => entry.data.pubDate)),
 };
 
 type NavLink = { href: string; label: string; match?: string; private?: boolean; fresh?: boolean };
@@ -35,11 +37,12 @@ const items: NavItem[] = [
   {
     type: 'group',
     label: 'Trail',
-    fresh: freshNav.week || freshNav.calendar,
+    fresh: freshNav.week || freshNav.calendar || freshNav.pulse,
     children: [
       { href: '/postcard', label: 'Postcards', match: '/postcard' },
       { href: '/stood', label: 'Where I stood' },
       { href: '/week', label: 'This week', fresh: freshNav.week },
+      { href: '/pulse', label: 'Thin tires', fresh: freshNav.pulse },
       { href: '/calendar', label: 'Berlin calendar', fresh: freshNav.calendar },
     ],
   },

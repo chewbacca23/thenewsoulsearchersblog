@@ -18,6 +18,10 @@ run_worker_first = true
 binding = "STATS"
 id = "9f6a71b57d0643389c34f328e801012f"
 
+# Thin tires pulse — road news every 3 calendar days (06:00 UTC).
+[triggers]
+crons = ["0 6 */3 * *"]
+
 # Contact form can send through Cloudflare Email Sending when enabled:
 # [[send_email]]
 # name = "EMAIL"
