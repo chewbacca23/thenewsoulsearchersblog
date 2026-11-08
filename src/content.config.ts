@@ -232,6 +232,7 @@ const pulse = defineCollection({
     .object({
       title: z.string(),
       pubDate: z.coerce.date(),
+      section: z.enum(['road-men', 'road-women', 'cyclo-cross']).default('road-men'),
       source: z.string().optional().default(''),
       url: z.string().optional().default(''),
       image: z.string().optional().default(''),

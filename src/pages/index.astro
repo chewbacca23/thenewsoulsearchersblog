@@ -16,7 +16,7 @@ const [shots, stories, pulses] = await Promise.all([
   getCollection('pulse', ({ data }) => !data.draft),
 ]);
 
-const pulseTease = newestFirst(pulses, (entry) => entry.data.pubDate).slice(0, 3);
+const pulseTease = newestFirst(pulses, (entry) => entry.data.pubDate);
 
 const ridesNewest = newestFirst(
   stories,
@@ -184,16 +184,35 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
         <p class="eyebrow">Thin tires</p>
         <a class="pulse-tease-all" href="/pulse">All the pulse</a>
       </div>
-      <p class="pulse-tease-lead">Road news from the thin-tire world — refreshed every few days.</p>
+      <p class="pulse-tease-lead">
+        Road men, road women, cyclo-cross — refreshed every couple of days.
+      </p>
       <ol class="pulse-tease-list" data-pulse-tease>
         {
-          pulseTease.length === 0 ? (
-            <li class="empty">
-              <a href="/pulse">Thin tires</a> — road news when it lands.
-            </li>
-          ) : (
-            pulseTease.map((entry) => (
+          (() => {
+            const lanes = [
+              { id: 'road-men', label: 'Road race — men' },
+              { id: 'road-women', label: 'Road race — women' },
+              { id: 'cyclo-cross', label: 'Cyclo-cross' },
+            ];
+            const picks = lanes
+              .map((lane) => {
+                const hit = pulseTease.find(
+                  (entry) => (entry.data.section || 'road-men') === lane.id,
+                );
+                return hit ? { lane, entry: hit } : null;
+              })
+              .filter(Boolean);
+            if (picks.length === 0) {
+              return (
+                <li class="empty">
+                  <a href="/pulse">Thin tires</a> — road and CX when it lands.
+                </li>
+              );
+            }
+            return picks.map(({ lane, entry }) => (
               <li class="pulse-tease-item">
+                <span class="pulse-tease-lane">{lane.label}</span>
                 {entry.data.url ? (
                   <a href={entry.data.url} target="_blank" rel="noopener noreferrer">
                     {entry.data.title}
@@ -205,8 +224,8 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
                   <span class="pulse-tease-source">{entry.data.source}</span>
                 ) : null}
               </li>
-            ))
-          )
+            ));
+          })()
         }
       </ol>
     </div>
@@ -261,6 +280,15 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
     gap: 0.2rem;
   }
 
+  .pulse-tease-lane,
+  .pulse-tease-source {
+    color: var(--amber);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
   .pulse-tease-item a {
     color: var(--paper);
     text-decoration: none;
@@ -271,14 +299,6 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
 
   .pulse-tease-item a:hover {
     color: var(--amber-hot);
-  }
-
-  .pulse-tease-source {
-    color: var(--amber);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
   }
 
   .hero {

@@ -3,10 +3,21 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { newestFirst } from '../lib/newest';
 
+const SECTION_META = [
+  { id: 'road-men', label: 'Road race — men' },
+  { id: 'road-women', label: 'Road race — women' },
+  { id: 'cyclo-cross', label: 'Cyclo-cross' },
+] as const;
+
 const entries = newestFirst(
   await getCollection('pulse', ({ data }) => !data.draft),
   (entry) => entry.data.pubDate,
 );
+
+const groups = SECTION_META.map((section) => ({
+  ...section,
+  items: entries.filter((entry) => (entry.data.section || 'road-men') === section.id),
+}));
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
@@ -18,66 +29,79 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 
 <BaseLayout
   title="Thin tires"
-  description="Road cycling news and photos from the thin-tire world — updated every few days on The Soul Searchers."
+  description="Road men, road women, and cyclo-cross — thin-tire hype updated every couple of days on The Soul Searchers."
 >
   <section class="section">
     <div class="site-shell pulse">
       <p class="eyebrow reveal">Thin tires</p>
       <h1 class="section-title reveal reveal-delay-1">From the peloton</h1>
       <p class="section-lead reveal reveal-delay-2">
-        Road news that keeps the site on point.<br />
-        Fresh every few days — open a headline, or edit any piece in the editor.
+        Three lanes of hype: road race men, road race women, cyclo-cross.<br />
+        Fresh every couple of days — open a headline, or rewrite any piece in the editor.
       </p>
 
-      <ol class="pulse-list reveal reveal-delay-3" data-pulse-list>
+      <div class="pulse-board reveal reveal-delay-3" data-pulse-board>
         {
-          entries.length === 0 ? (
-            <li class="empty">Thin tires news lands here every few days.</li>
+          groups.every((group) => group.items.length === 0) ? (
+            <p class="empty">Thin tires news lands here every couple of days.</p>
           ) : (
-            entries.map((entry) => {
-              const { title, source, url, image, note, pubDate } = entry.data;
-              const when = dateFmt.format(pubDate);
-              const href = url || '#';
-              return (
-                <li class="pulse-item">
-                  {image ? (
-                    <a
-                      class="pulse-media"
-                      href={href}
-                      target={url ? '_blank' : undefined}
-                      rel={url ? 'noopener noreferrer' : undefined}
-                    >
-                      <img
-                        class="pulse-thumb"
-                        src={image}
-                        alt=""
-                        width="320"
-                        height="200"
-                        loading="lazy"
-                        decoding="async"
-                        referrerpolicy="no-referrer"
-                      />
-                    </a>
-                  ) : null}
-                  <div class="pulse-copy">
-                    <p class="pulse-meta">{[source, when].filter(Boolean).join(' · ')}</p>
-                    <h2 class="pulse-title">
-                      {url ? (
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          {title}
-                        </a>
-                      ) : (
-                        title
-                      )}
-                    </h2>
-                    {note ? <p class="pulse-note">{note}</p> : null}
-                  </div>
-                </li>
-              );
-            })
+            groups.map((group) => (
+              <section class="pulse-block" aria-labelledby={`pulse-${group.id}`}>
+                <h2 id={`pulse-${group.id}`} class="pulse-heading">
+                  {group.label}
+                </h2>
+                <ol class="pulse-list">
+                  {group.items.length === 0 ? (
+                    <li class="empty">Quiet in this lane — check back in a couple of days.</li>
+                  ) : (
+                    group.items.map((entry) => {
+                      const { title, source, url, image, note, pubDate } = entry.data;
+                      const when = dateFmt.format(pubDate);
+                      const href = url || '#';
+                      return (
+                        <li class="pulse-item">
+                          {image ? (
+                            <a
+                              class="pulse-media"
+                              href={href}
+                              target={url ? '_blank' : undefined}
+                              rel={url ? 'noopener noreferrer' : undefined}
+                            >
+                              <img
+                                class="pulse-thumb"
+                                src={image}
+                                alt=""
+                                width="320"
+                                height="200"
+                                loading="lazy"
+                                decoding="async"
+                                referrerpolicy="no-referrer"
+                              />
+                            </a>
+                          ) : null}
+                          <div class="pulse-copy">
+                            <p class="pulse-meta">{[source, when].filter(Boolean).join(' · ')}</p>
+                            <h3 class="pulse-title">
+                              {url ? (
+                                <a href={url} target="_blank" rel="noopener noreferrer">
+                                  {title}
+                                </a>
+                              ) : (
+                                title
+                              )}
+                            </h3>
+                            {note ? <p class="pulse-note">{note}</p> : null}
+                          </div>
+                        </li>
+                      );
+                    })
+                  )}
+                </ol>
+              </section>
+            ))
           )
         }
-      </ol>
+      </div>
     </div>
   </section>
 </BaseLayout>
@@ -85,6 +109,19 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
 <style>
   .pulse {
     max-width: 42rem;
+  }
+
+  .pulse-board {
+    display: grid;
+    gap: 2.5rem;
+  }
+
+  .pulse-heading {
+    margin: 0 0 1rem;
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    font-weight: 500;
+    color: var(--paper);
   }
 
   .pulse-list {

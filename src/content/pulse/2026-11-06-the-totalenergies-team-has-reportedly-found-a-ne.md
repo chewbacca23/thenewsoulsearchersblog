@@ -1,6 +1,7 @@
 ---
 title: "The TotalEnergies team has reportedly found a new sponsor at last"
 pubDate: 2026-11-06
+section: road-men
 source: "Escape Collective"
 url: "https://escapecollective.com/the-totalenergies-team-has-reportedly-found-a-new-sponsor-at-last/"
 image: ""

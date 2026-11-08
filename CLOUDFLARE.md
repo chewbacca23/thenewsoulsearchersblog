@@ -253,9 +253,9 @@ Do not force-push over `thenewsoulsearchersblog` `main` after using the editor �
 
 ---
 
-## Thin tires pulse (auto every 3 days)
+## Thin tires pulse (auto every 2 days)
 
-Cron on **`thenewsoulsearchersblogc`**: `0 6 */3 * *` (06:00 UTC every 3rd calendar day). Pulls road RSS → KV (`STATS` key `pulse:v1`) → optional GitHub commits under `src/content/pulse/` for Decap.
+Cron on **`thenewsoulsearchersblogc`**: `0 6 */2 * *` (06:00 UTC every 2nd calendar day). Pulls cycling RSS → three sections (road men, road women, cyclo-cross) → KV (`STATS` key `pulse:v1`) → optional GitHub commits under `src/content/pulse/` for Decap.
 
 **Secret (so new items also land in the editor):** a fine-scoped GitHub PAT with `contents:write` on `chewbacca23/thenewsoulsearchersblog`:
 

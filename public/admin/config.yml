@@ -231,7 +231,7 @@ collections:
   - name: pulse
     label: Thin tires
     label_singular: Pulse item
-    description: Road cycling headlines that land every few days. Auto-filled — open any piece to rewrite, draft, or delete. Shows on Thin tires and a quiet home tease.
+    description: Road men, road women, and cyclo-cross headlines every couple of days. Auto-filled — open any piece to rewrite, move section, draft, or delete.
     folder: src/content/pulse
     create: true
     delete: true
@@ -245,6 +245,15 @@ collections:
     fields:
       - { label: Title, name: title, widget: string, hint: "Headline. You can rewrite the auto one." }
       - { label: Date, name: pubDate, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD", hint: "When the story ran." }
+      - label: Section
+        name: section
+        widget: select
+        default: road-men
+        options:
+          - { label: Road race — men, value: road-men }
+          - { label: Road race — women, value: road-women }
+          - { label: Cyclo-cross, value: cyclo-cross }
+        hint: "Which hype lane on Thin tires."
       - { label: Source, name: source, widget: string, required: false, hint: "Like Cyclingnews or Escape Collective." }
       - { label: Link, name: url, widget: string, required: false, hint: "Full URL to the story." }
       - { label: Photo URL, name: image, widget: string, required: false, hint: "Optional. Remote thumb from the feed." }

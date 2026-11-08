@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  classifyPulseSection,
   fillPulseInHtml,
   isRoadish,
   parseRssItems,
   pickPulseItems,
-  pulseListHtml,
+  pulseBoardHtml,
   pulseMarkdown,
   pulseTeaseHtml,
   runPulseCron,
@@ -34,12 +35,25 @@ const sampleRss = `<?xml version="1.0"?>
   <pubDate>Fri, 06 Nov 2026 10:00:00 +0000</pubDate>
   <media:content url="https://cdn.example.com/transfer.jpg" />
 </item>
+<item>
+  <title><![CDATA[ Demi Vollering aims at Tour de France Femmes again ]]></title>
+  <link>https://www.cyclingnews.com/womens-vollering/</link>
+  <category><![CDATA[Women's Cycling]]></category>
+  <description>Defending the yellow jersey.</description>
+  <pubDate>Fri, 06 Nov 2026 09:00:00 +0000</pubDate>
+</item>
+<item>
+  <title>Mud and gaps at the Koppenbergcross</title>
+  <link>https://escapecollective.com/koppenbergcross-report/</link>
+  <description>Cyclo-cross world cup heat.</description>
+  <pubDate>Fri, 06 Nov 2026 08:00:00 +0000</pubDate>
+</item>
 </channel></rss>`;
 
 describe('parseRssItems', () => {
   it('reads title link image and skips markup', () => {
     const items = parseRssItems(sampleRss, 'Cyclingnews');
-    assert.equal(items.length, 3);
+    assert.equal(items.length, 5);
     assert.equal(items[0].title, 'Tour de France stage win for thin tires');
     assert.equal(items[0].source, 'Cyclingnews');
     assert.match(items[0].image, /tour\.jpg/);
@@ -48,15 +62,51 @@ describe('parseRssItems', () => {
   });
 });
 
+describe('classifyPulseSection', () => {
+  it('splits road men, road women, and cyclo-cross', () => {
+    assert.equal(
+      classifyPulseSection({
+        title: 'Tour de France stage win',
+        link: 'https://x.test/a',
+      }),
+      'road-men',
+    );
+    assert.equal(
+      classifyPulseSection({
+        title: 'Vollering eyes Tour de France Femmes',
+        link: 'https://x.test/b',
+        categories: ["Women's Cycling"],
+      }),
+      'road-women',
+    );
+    assert.equal(
+      classifyPulseSection({
+        title: 'Koppenbergcross world cup',
+        link: 'https://x.test/c',
+      }),
+      'cyclo-cross',
+    );
+    assert.equal(
+      classifyPulseSection({
+        title: 'New e-bike motor',
+        link: 'https://x.test/d',
+      }),
+      null,
+    );
+  });
+});
+
 describe('pickPulseItems', () => {
-  it('keeps road stories and skips e-bike noise', () => {
+  it('keeps sectioned stories and skips e-bike noise', () => {
     const now = Date.parse('2026-11-06T18:00:00Z');
     const candidates = parseRssItems(sampleRss, 'Cyclingnews');
     const { added, items } = pickPulseItems(candidates, [], now);
-    assert.equal(added.length, 2);
+    assert.ok(added.length >= 3);
     assert.ok(added.every((row) => isRoadish(row)));
     assert.ok(!items.some((row) => /e-bike/i.test(row.title)));
-    assert.equal(items[0].link, 'https://www.cyclingnews.com/tour-de-france-stage/');
+    assert.ok(items.some((row) => row.section === 'road-men'));
+    assert.ok(items.some((row) => row.section === 'road-women'));
+    assert.ok(items.some((row) => row.section === 'cyclo-cross'));
   });
 
   it('dedupes against what we already stored', () => {
@@ -68,16 +118,17 @@ describe('pickPulseItems', () => {
         title: 'Tour de France stage win for thin tires',
         link: 'https://www.cyclingnews.com/tour-de-france-stage/',
         pubDate: '2026-11-06T12:00:00.000Z',
+        section: 'road-men',
       },
     ];
     const { added } = pickPulseItems(candidates, existing, now);
-    assert.equal(added.length, 1);
-    assert.match(added[0].link, /transfer-rumour/);
+    assert.ok(!added.some((row) => /tour-de-france-stage/.test(row.link)));
+    assert.ok(added.some((row) => /womens-vollering|koppenbergcross|transfer-rumour/.test(row.link)));
   });
 });
 
 describe('pulse html', () => {
-  it('renders list and tease markers for Worker inject', () => {
+  it('renders section board and tease markers for Worker inject', () => {
     const items = [
       {
         title: 'A quiet breakaway',
@@ -86,19 +137,28 @@ describe('pulse html', () => {
         note: 'Two go clear.',
         image: 'https://cdn.example.com/a.jpg',
         pubDate: '2026-11-06T12:00:00.000Z',
+        section: 'road-men',
+      },
+      {
+        title: 'Women open the classics',
+        link: 'https://example.com/b',
+        source: 'Escape Collective',
+        pubDate: '2026-11-06T11:00:00.000Z',
+        section: 'road-women',
       },
     ];
-    assert.match(pulseListHtml(items), /pulse-item/);
-    assert.match(pulseListHtml(items), /A quiet breakaway/);
-    assert.match(pulseTeaseHtml(items), /pulse-tease-item/);
+    assert.match(pulseBoardHtml(items), /Road race — men/);
+    assert.match(pulseBoardHtml(items), /Road race — women/);
+    assert.match(pulseBoardHtml(items), /A quiet breakaway/);
+    assert.match(pulseTeaseHtml(items), /pulse-tease-lane/);
     const filled = fillPulseInHtml(
-      '<ol data-pulse-list><li class="empty">x</li></ol><ol data-pulse-tease><li class="empty">y</li></ol>',
+      '<div data-pulse-board><p class="empty">x</p></div><ol data-pulse-tease><li class="empty">y</li></ol>',
       items,
     );
-    assert.match(filled, /data-pulse-list/);
+    assert.match(filled, /data-pulse-board/);
     assert.match(filled, /A quiet breakaway/);
     assert.match(filled, /data-pulse-tease/);
-    assert.match(pulseMarkdown(items[0]), /title: "A quiet breakaway"/);
+    assert.match(pulseMarkdown(items[0]), /section: road-men/);
   });
 });
 
@@ -120,9 +180,9 @@ describe('runPulseCron', () => {
     const result = await runPulseCron(env, {
       fetchXml: async () => sampleRss,
     });
-    assert.equal(result.added, 2);
-    assert.ok(result.total >= 2);
+    assert.ok(result.added >= 3);
+    assert.ok(result.total >= 3);
     const saved = JSON.parse(store.get('pulse:v1'));
-    assert.equal(saved.items.length, 2);
+    assert.ok(saved.items.length >= 3);
   });
 });

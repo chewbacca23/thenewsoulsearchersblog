@@ -1,15 +1,22 @@
 /**
- * Thin tires pulse — every 3 days pull road-cycling RSS into KV + GitHub
- * markdown (Decap-editable), then inject the live list on /pulse and home.
+ * Thin tires pulse — every 2 days pull cycling RSS into KV + GitHub
+ * markdown (Decap-editable), then inject live sections on /pulse and home.
+ * Sections: road race men, road race women, cyclo-cross.
  */
 
 const REPO = 'chewbacca23/thenewsoulsearchersblog';
 const BRANCH = 'main';
 const PULSE_KV_KEY = 'pulse:v1';
 const PULSE_DIR = 'src/content/pulse';
-const MAX_KEEP = 24;
-const PICK_PER_RUN = 5;
+const MAX_KEEP_PER_SECTION = 8;
+const PICK_PER_SECTION = 2;
 const FRESH_MS = 5 * 24 * 60 * 60 * 1000;
+
+export const PULSE_SECTIONS = [
+  { id: 'road-men', label: 'Road race — men' },
+  { id: 'road-women', label: 'Road race — women' },
+  { id: 'cyclo-cross', label: 'Cyclo-cross' },
+];
 
 export const PULSE_FEEDS = [
   {
@@ -26,8 +33,12 @@ export const PULSE_FEEDS = [
   },
 ];
 
-const SKIP_TITLE =
-  /\b(e-?bike|ebike|mtb|mountain bike|gravel|cyclo-?cross|cyclocross|bmx|enduro|downhill)\b/i;
+const SKIP_NOISE =
+  /\b(e-?bike|ebike|mtb|mountain bike|gravel|bmx|enduro|downhill)\b/i;
+const CX_HIT =
+  /cyclo-?\s*cross|cyclocross|\bcx\b|koppenberg|namur|dendermonde|overijse|world cup[\s\S]{0,24}cross|cross world/i;
+const WOMEN_HIT =
+  /\b(women'?s?|womens|woman|female|femmes?|ladies|girls|uci women|tour de france femmes|giro d['’]?italia women|vuelta.*women|women'?s worldtour|women'?s cycling)\b/i;
 
 export function escapeHtml(value) {
   return String(value ?? '')
@@ -84,6 +95,17 @@ export function extractImage(block) {
   return htmlImg ? htmlImg[1].trim() : '';
 }
 
+export function extractCategories(block) {
+  const cats = [];
+  const re = /<category\b[^>]*>([\s\S]*?)<\/category>/gi;
+  let match;
+  while ((match = re.exec(String(block || '')))) {
+    const text = stripHtml(match[1]);
+    if (text) cats.push(text);
+  }
+  return cats;
+}
+
 export function itemIdFromUrl(url) {
   const path = String(url || '')
     .trim()
@@ -106,6 +128,29 @@ export function slugForItem(item) {
   return `${day}-${base || 'item'}`;
 }
 
+export function sectionLabel(id) {
+  return PULSE_SECTIONS.find((row) => row.id === id)?.label || 'From the peloton';
+}
+
+/** Sort item into a hype section, or null if it does not belong. */
+export function classifyPulseSection(item) {
+  const title = String(item?.title || '');
+  const note = String(item?.note || '');
+  const link = String(item?.link || '');
+  const cats = Array.isArray(item?.categories) ? item.categories.join(' ') : '';
+  const hay = `${title} ${note} ${link} ${cats}`;
+  if (!title || !item?.link) return null;
+  if (CX_HIT.test(hay)) return 'cyclo-cross';
+  if (WOMEN_HIT.test(hay)) return 'road-women';
+  if (SKIP_NOISE.test(hay)) return null;
+  return 'road-men';
+}
+
+/** @deprecated use classifyPulseSection — kept for older tests */
+export function isRoadish(item) {
+  return classifyPulseSection(item) != null;
+}
+
 export function parseRssItems(xml, source) {
   const chunks = String(xml || '').match(/<item\b[\s\S]*?<\/item>/gi) || [];
   return chunks.map((block) => {
@@ -118,7 +163,8 @@ export function parseRssItems(xml, source) {
       ? new Date(pubMs).toISOString()
       : new Date().toISOString();
     const image = extractImage(block);
-    return {
+    const categories = extractCategories(block);
+    const base = {
       id: itemIdFromUrl(link),
       title,
       link,
@@ -126,16 +172,11 @@ export function parseRssItems(xml, source) {
       note: description,
       image,
       pubDate,
+      categories,
       draft: false,
     };
+    return { ...base, section: classifyPulseSection(base) };
   });
-}
-
-export function isRoadish(item) {
-  const title = String(item?.title || '');
-  if (!title) return false;
-  if (SKIP_TITLE.test(title)) return false;
-  return Boolean(item.link);
 }
 
 export function pickPulseItems(candidates, existing = [], now = Date.now()) {
@@ -143,28 +184,49 @@ export function pickPulseItems(candidates, existing = [], now = Date.now()) {
     (existing || []).map((row) => String(row.link || row.id || '').toLowerCase()).filter(Boolean),
   );
   const fresh = [];
-  for (const item of candidates) {
-    if (!isRoadish(item)) continue;
+  const pickedPerSection = Object.fromEntries(PULSE_SECTIONS.map((s) => [s.id, 0]));
+
+  for (const raw of candidates) {
+    const section = raw.section || classifyPulseSection(raw);
+    if (!section) continue;
+    const item = { ...raw, section };
     const key = String(item.link || item.id || '').toLowerCase();
     if (!key || seen.has(key)) continue;
     const age = now - Date.parse(item.pubDate);
     if (Number.isFinite(age) && (age < 0 || age > FRESH_MS)) continue;
+    if ((pickedPerSection[section] || 0) >= PICK_PER_SECTION) continue;
     seen.add(key);
+    pickedPerSection[section] = (pickedPerSection[section] || 0) + 1;
     fresh.push(item);
-    if (fresh.length >= PICK_PER_RUN) break;
   }
-  const merged = [...fresh, ...(existing || [])];
-  const dedup = [];
+
+  const merged = [...fresh, ...(existing || [])].map((row) => ({
+    ...row,
+    section: row.section || classifyPulseSection(row) || 'road-men',
+  }));
+
+  const perSection = Object.fromEntries(PULSE_SECTIONS.map((s) => [s.id, []]));
   const urls = new Set();
   for (const row of merged) {
     const key = String(row.link || row.id || '').toLowerCase();
-    if (!key || urls.has(key)) continue;
-    if (row.draft) continue;
+    if (!key || urls.has(key) || row.draft) continue;
+    const section = row.section || 'road-men';
+    if (!perSection[section]) continue;
+    if (perSection[section].length >= MAX_KEEP_PER_SECTION) continue;
     urls.add(key);
-    dedup.push(row);
-    if (dedup.length >= MAX_KEEP) break;
+    perSection[section].push(row);
   }
-  return { added: fresh, items: dedup };
+
+  const items = PULSE_SECTIONS.flatMap((s) => perSection[s.id]);
+  return { added: fresh, items };
+}
+
+export function groupPulseBySection(items) {
+  const list = Array.isArray(items) ? items.filter((row) => !row.draft) : [];
+  return PULSE_SECTIONS.map((section) => ({
+    ...section,
+    items: list.filter((row) => (row.section || 'road-men') === section.id),
+  }));
 }
 
 export function pulseMarkdown(item) {
@@ -174,10 +236,12 @@ export function pulseMarkdown(item) {
     .split('\n')
     .map((line) => `  ${line}`)
     .join('\n');
+  const section = item.section || classifyPulseSection(item) || 'road-men';
   const lines = [
     '---',
     `title: "${title}"`,
     `pubDate: ${String(item.pubDate || '').slice(0, 10)}`,
+    `section: ${section}`,
     `source: "${String(item.source || '').replace(/"/g, '')}"`,
     `url: "${String(item.link || '').replace(/"/g, '')}"`,
     `image: "${String(item.image || '').replace(/"/g, '')}"`,
@@ -190,17 +254,10 @@ export function pulseMarkdown(item) {
   return lines.join('\n');
 }
 
-export function pulseListHtml(items) {
-  const list = Array.isArray(items) ? items.filter((row) => !row.draft) : [];
+function pulseItemsHtml(list, dateFmt) {
   if (!list.length) {
-    return `<li class="empty">Thin tires news lands here every few days.</li>`;
+    return `<li class="empty">Quiet in this lane — check back in a couple of days.</li>`;
   }
-  const dateFmt = new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'Europe/Berlin',
-  });
   return list
     .map((item) => {
       const when = Number.isFinite(Date.parse(item.pubDate))
@@ -211,10 +268,12 @@ export function pulseListHtml(items) {
         : '';
       return (
         `<li class="pulse-item">` +
-        (img ? `<a class="pulse-media" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${img}</a>` : '') +
+        (img
+          ? `<a class="pulse-media" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${img}</a>`
+          : '') +
         `<div class="pulse-copy">` +
         `<p class="pulse-meta">${escapeHtml([item.source, when].filter(Boolean).join(' · '))}</p>` +
-        `<h2 class="pulse-title"><a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></h2>` +
+        `<h3 class="pulse-title"><a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></h3>` +
         (item.note ? `<p class="pulse-note">${escapeHtml(item.note)}</p>` : '') +
         `</div></li>`
       );
@@ -222,15 +281,48 @@ export function pulseListHtml(items) {
     .join('');
 }
 
-export function pulseTeaseHtml(items) {
-  const list = (Array.isArray(items) ? items.filter((row) => !row.draft) : []).slice(0, 3);
-  if (!list.length) {
-    return `<li class="empty"><a href="/pulse">Thin tires</a> — road news when it lands.</li>`;
+export function pulseBoardHtml(items) {
+  const dateFmt = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Europe/Berlin',
+  });
+  const groups = groupPulseBySection(items);
+  if (!groups.some((g) => g.items.length)) {
+    return `<p class="empty">Thin tires news lands here every couple of days.</p>`;
   }
-  return list
+  return groups
+    .map((group) => {
+      return (
+        `<section class="pulse-block" data-pulse-section="${escapeHtml(group.id)}" aria-labelledby="pulse-${escapeHtml(group.id)}">` +
+        `<h2 id="pulse-${escapeHtml(group.id)}" class="pulse-heading">${escapeHtml(group.label)}</h2>` +
+        `<ol class="pulse-list">${pulseItemsHtml(group.items, dateFmt)}</ol>` +
+        `</section>`
+      );
+    })
+    .join('');
+}
+
+/** Flat list for older inject markers — prefer pulseBoardHtml. */
+export function pulseListHtml(items) {
+  return pulseBoardHtml(items);
+}
+
+export function pulseTeaseHtml(items) {
+  const groups = groupPulseBySection(items);
+  const picks = [];
+  for (const group of groups) {
+    if (group.items[0]) picks.push({ ...group.items[0], sectionLabel: group.label });
+  }
+  if (!picks.length) {
+    return `<li class="empty"><a href="/pulse">Thin tires</a> — road and CX when it lands.</li>`;
+  }
+  return picks
     .map((item) => {
       return (
         `<li class="pulse-tease-item">` +
+        `<span class="pulse-tease-lane">${escapeHtml(item.sectionLabel || sectionLabel(item.section))}</span>` +
         `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>` +
         `<span class="pulse-tease-source">${escapeHtml(item.source || '')}</span>` +
         `</li>`
@@ -242,7 +334,11 @@ export function pulseTeaseHtml(items) {
 export function fillPulseInHtml(html, items) {
   const list = Array.isArray(items) ? items : [];
   return String(html)
-    .replace(/<ol([^>]*data-pulse-list[^>]*)>[\s\S]*?<\/ol>/, `<ol$1>${pulseListHtml(list)}</ol>`)
+    .replace(
+      /<div([^>]*data-pulse-board[^>]*)>[\s\S]*?<\/div>/,
+      `<div$1>${pulseBoardHtml(list)}</div>`,
+    )
+    .replace(/<ol([^>]*data-pulse-list[^>]*)>[\s\S]*?<\/ol>/, `<ol$1>${pulseBoardHtml(list)}</ol>`)
     .replace(
       /<ol([^>]*data-pulse-tease[^>]*)>[\s\S]*?<\/ol>/,
       `<ol$1>${pulseTeaseHtml(list)}</ol>`,
@@ -403,6 +499,7 @@ export async function handlePulseRequest(request, env) {
     return Response.json({
       updatedAt: new Date().toISOString(),
       count: items.length,
+      sections: groupPulseBySection(items),
       items,
     });
   }
