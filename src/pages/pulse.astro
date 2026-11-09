@@ -4,9 +4,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { newestFirst } from '../lib/newest';
 
 const SECTION_META = [
-  { id: 'road-men', label: 'Road race — men' },
-  { id: 'road-women', label: 'Road race — women' },
-  { id: 'cyclo-cross', label: 'Cyclo-cross' },
+  { id: 'road-men', label: 'Road race — men', kicker: 'Peloton' },
+  { id: 'road-women', label: 'Road race — women', kicker: 'WorldTour' },
+  { id: 'cyclo-cross', label: 'Cyclo-cross', kicker: 'Mud' },
 ] as const;
 
 const entries = newestFirst(
@@ -31,7 +31,7 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
   title="Thin tires"
   description="Road men, road women, and cyclo-cross — thin-tire hype updated every couple of days on The Soul Searchers."
 >
-  <section class="section">
+  <section class="section pulse-page">
     <div class="site-shell pulse">
       <p class="eyebrow reveal">Thin tires</p>
       <h1 class="section-title reveal reveal-delay-1">From the peloton</h1>
@@ -45,60 +45,121 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
           groups.every((group) => group.items.length === 0) ? (
             <p class="empty">Thin tires news lands here every couple of days.</p>
           ) : (
-            groups.map((group) => (
-              <section class="pulse-block" aria-labelledby={`pulse-${group.id}`}>
-                <h2 id={`pulse-${group.id}`} class="pulse-heading">
-                  {group.label}
-                </h2>
-                <ol class="pulse-list">
-                  {group.items.length === 0 ? (
-                    <li class="empty">Quiet in this lane — check back in a couple of days.</li>
-                  ) : (
-                    group.items.map((entry) => {
-                      const { title, source, url, image, note, pubDate } = entry.data;
-                      const when = dateFmt.format(pubDate);
-                      const href = url || '#';
-                      return (
-                        <li class="pulse-item">
-                          {image ? (
-                            <a
-                              class="pulse-media"
-                              href={href}
-                              target={url ? '_blank' : undefined}
-                              rel={url ? 'noopener noreferrer' : undefined}
-                            >
-                              <img
-                                class="pulse-thumb"
-                                src={image}
-                                alt=""
-                                width="320"
-                                height="200"
-                                loading="lazy"
-                                decoding="async"
-                                referrerpolicy="no-referrer"
-                              />
+            groups.map((group) => {
+              const [lead, ...rest] = group.items;
+              return (
+                <section
+                  class={`pulse-block pulse-block--${group.id}`}
+                  data-pulse-section={group.id}
+                  aria-labelledby={`pulse-${group.id}`}
+                >
+                  <header class="pulse-lane-head">
+                    <div>
+                      <p class="pulse-lane-kicker">{group.kicker}</p>
+                      <h2 id={`pulse-${group.id}`} class="pulse-heading">
+                        {group.label}
+                      </h2>
+                    </div>
+                    <p class="pulse-lane-count">
+                      {group.items.length === 0
+                        ? 'Quiet'
+                        : `${group.items.length} ${group.items.length === 1 ? 'story' : 'stories'}`}
+                    </p>
+                  </header>
+
+                  {lead ? (
+                    <article class="pulse-feature">
+                      {lead.data.image ? (
+                        <a
+                          class="pulse-feature-media"
+                          href={lead.data.url || '#'}
+                          target={lead.data.url ? '_blank' : undefined}
+                          rel={lead.data.url ? 'noopener noreferrer' : undefined}
+                        >
+                          <img
+                            class="pulse-feature-img"
+                            src={lead.data.image}
+                            alt=""
+                            width="1200"
+                            height="675"
+                            loading="lazy"
+                            decoding="async"
+                            referrerpolicy="no-referrer"
+                          />
+                        </a>
+                      ) : (
+                        <div class="pulse-feature-media pulse-feature-media--blank" aria-hidden="true" />
+                      )}
+                      <div class="pulse-feature-copy">
+                        <p class="pulse-meta">
+                          {[lead.data.source, dateFmt.format(lead.data.pubDate)].filter(Boolean).join(' · ')}
+                        </p>
+                        <h3 class="pulse-feature-title">
+                          {lead.data.url ? (
+                            <a href={lead.data.url} target="_blank" rel="noopener noreferrer">
+                              {lead.data.title}
                             </a>
-                          ) : null}
-                          <div class="pulse-copy">
-                            <p class="pulse-meta">{[source, when].filter(Boolean).join(' · ')}</p>
-                            <h3 class="pulse-title">
-                              {url ? (
-                                <a href={url} target="_blank" rel="noopener noreferrer">
-                                  {title}
-                                </a>
-                              ) : (
-                                title
-                              )}
-                            </h3>
-                            {note ? <p class="pulse-note">{note}</p> : null}
-                          </div>
-                        </li>
-                      );
-                    })
+                          ) : (
+                            lead.data.title
+                          )}
+                        </h3>
+                        {lead.data.note ? <p class="pulse-note">{lead.data.note}</p> : null}
+                      </div>
+                    </article>
+                  ) : (
+                    <p class="empty">Quiet in this lane — check back in a couple of days.</p>
                   )}
-                </ol>
-              </section>
-            ))
+
+                  {rest.length > 0 ? (
+                    <ol class="pulse-list">
+                      {rest.map((entry) => {
+                        const { title, source, url, image, note, pubDate } = entry.data;
+                        const when = dateFmt.format(pubDate);
+                        const href = url || '#';
+                        return (
+                          <li class="pulse-item">
+                            {image ? (
+                              <a
+                                class="pulse-media"
+                                href={href}
+                                target={url ? '_blank' : undefined}
+                                rel={url ? 'noopener noreferrer' : undefined}
+                              >
+                                <img
+                                  class="pulse-thumb"
+                                  src={image}
+                                  alt=""
+                                  width="320"
+                                  height="200"
+                                  loading="lazy"
+                                  decoding="async"
+                                  referrerpolicy="no-referrer"
+                                />
+                              </a>
+                            ) : (
+                              <span class="pulse-media pulse-media--blank" aria-hidden="true" />
+                            )}
+                            <div class="pulse-copy">
+                              <p class="pulse-meta">{[source, when].filter(Boolean).join(' · ')}</p>
+                              <h3 class="pulse-title">
+                                {url ? (
+                                  <a href={url} target="_blank" rel="noopener noreferrer">
+                                    {title}
+                                  </a>
+                                ) : (
+                                  title
+                                )}
+                              </h3>
+                              {note ? <p class="pulse-note">{note}</p> : null}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  ) : null}
+                </section>
+              );
+            })
           )
         }
       </div>
@@ -106,22 +167,155 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
   </section>
 </BaseLayout>
 
-<style>
-  .pulse {
-    max-width: 42rem;
+<style is:global>
+  .pulse-page .pulse {
+    max-width: 56rem;
   }
 
   .pulse-board {
     display: grid;
-    gap: 2.5rem;
+    gap: 2.75rem;
+  }
+
+  .pulse-block {
+    --pulse-accent: var(--amber);
+    --pulse-glow: rgba(212, 163, 90, 0.18);
+    position: relative;
+    padding: 1.35rem 1.25rem 1.4rem;
+    border: 1px solid rgba(215, 224, 232, 0.12);
+    border-radius: 1.1rem;
+    background:
+      radial-gradient(ellipse 70% 55% at 0% 0%, var(--pulse-glow), transparent 60%),
+      rgba(215, 224, 232, 0.03);
+    overflow: hidden;
+  }
+
+  .pulse-block--road-men {
+    --pulse-accent: var(--amber-hot);
+    --pulse-glow: rgba(240, 194, 122, 0.16);
+  }
+
+  .pulse-block--road-women {
+    --pulse-accent: #7eb8c9;
+    --pulse-glow: rgba(61, 107, 122, 0.28);
+  }
+
+  .pulse-block--cyclo-cross {
+    --pulse-accent: var(--crest-red);
+    --pulse-glow: rgba(227, 27, 35, 0.14);
+  }
+
+  .pulse-block::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--pulse-accent);
+    opacity: 0.9;
+  }
+
+  .pulse-lane-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 0 1.15rem;
+    padding-left: 0.35rem;
+  }
+
+  .pulse-lane-kicker {
+    margin: 0 0 0.25rem;
+    color: var(--pulse-accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
 
   .pulse-heading {
-    margin: 0 0 1rem;
+    margin: 0;
     font-family: var(--font-display);
-    font-size: 1.45rem;
+    font-size: clamp(1.55rem, 3vw, 1.9rem);
     font-weight: 500;
+    letter-spacing: -0.02em;
     color: var(--paper);
+  }
+
+  .pulse-lane-count {
+    margin: 0;
+    color: rgba(215, 224, 232, 0.55);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .pulse-feature {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
+  }
+
+  @media (min-width: 760px) {
+    .pulse-feature {
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.25rem;
+      align-items: stretch;
+    }
+  }
+
+  .pulse-feature-media {
+    display: block;
+    overflow: hidden;
+    border-radius: 0.85rem;
+    aspect-ratio: 16 / 10;
+    background: #121820;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  }
+
+  .pulse-feature-media--blank {
+    background:
+      linear-gradient(135deg, rgba(215, 224, 232, 0.06), transparent 55%),
+      #121820;
+  }
+
+  .pulse-feature-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .pulse-feature-media:hover .pulse-feature-img {
+    transform: scale(1.04);
+  }
+
+  .pulse-feature-copy {
+    display: grid;
+    align-content: center;
+    gap: 0.45rem;
+    padding: 0.15rem 0.1rem;
+  }
+
+  .pulse-feature-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 2.8vw, 1.85rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .pulse-feature-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .pulse-feature-title a:hover {
+    color: var(--pulse-accent);
   }
 
   .pulse-list {
@@ -129,40 +323,63 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 1.5rem;
+    gap: 0.85rem;
   }
 
   .pulse-item {
     display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
     gap: 0.85rem;
-    align-items: start;
+    align-items: center;
+    padding: 0.55rem 0.55rem 0.55rem 0.45rem;
+    border-radius: 0.75rem;
+    border: 1px solid transparent;
+    transition:
+      background 180ms ease,
+      border-color 180ms ease;
+  }
+
+  .pulse-item:hover {
+    border-color: rgba(215, 224, 232, 0.1);
+    background: rgba(215, 224, 232, 0.04);
   }
 
   @media (min-width: 640px) {
     .pulse-item {
-      grid-template-columns: 7.5rem minmax(0, 1fr);
-      gap: 1.1rem;
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      gap: 1rem;
     }
   }
 
   .pulse-media {
     display: block;
     overflow: hidden;
-    border-radius: 0.65rem;
+    border-radius: 0.55rem;
     aspect-ratio: 8 / 5;
     background: #121820;
+  }
+
+  .pulse-media--blank {
+    background:
+      linear-gradient(135deg, rgba(215, 224, 232, 0.06), transparent 55%),
+      #121820;
   }
 
   .pulse-thumb {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .pulse-item:hover .pulse-thumb {
+    transform: scale(1.05);
   }
 
   .pulse-meta {
-    margin: 0 0 0.35rem;
-    color: var(--amber);
-    font-size: 0.75rem;
+    margin: 0 0 0.25rem;
+    color: var(--pulse-accent);
+    font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -171,9 +388,10 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
   .pulse-title {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 1.35rem;
+    font-size: 1.15rem;
     font-weight: 500;
     letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
   .pulse-title a {
@@ -182,16 +400,18 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
   }
 
   .pulse-title a:hover {
-    color: var(--amber-hot);
+    color: var(--pulse-accent);
   }
 
   .pulse-note {
-    margin: 0.45rem 0 0;
-    color: rgba(215, 224, 232, 0.72);
+    margin: 0.4rem 0 0;
+    color: rgba(215, 224, 232, 0.7);
+    font-size: 0.95rem;
     max-width: 36rem;
   }
 
-  .empty {
+  .pulse-page .empty {
+    margin: 0;
     color: rgba(215, 224, 232, 0.68);
   }
 </style>

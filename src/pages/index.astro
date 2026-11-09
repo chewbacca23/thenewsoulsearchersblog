@@ -181,19 +181,21 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
   <section class="section pulse-tease-section" aria-label="Thin tires">
     <div class="site-shell pulse-tease">
       <div class="pulse-tease-head">
-        <p class="eyebrow">Thin tires</p>
+        <div>
+          <p class="eyebrow">Thin tires</p>
+          <p class="pulse-tease-lead">
+            Road men, road women, cyclo-cross — refreshed every couple of days.
+          </p>
+        </div>
         <a class="pulse-tease-all" href="/pulse">All the pulse</a>
       </div>
-      <p class="pulse-tease-lead">
-        Road men, road women, cyclo-cross — refreshed every couple of days.
-      </p>
       <ol class="pulse-tease-list" data-pulse-tease>
         {
           (() => {
             const lanes = [
-              { id: 'road-men', label: 'Road race — men' },
-              { id: 'road-women', label: 'Road race — women' },
-              { id: 'cyclo-cross', label: 'Cyclo-cross' },
+              { id: 'road-men', label: 'Road race — men', kicker: 'Peloton' },
+              { id: 'road-women', label: 'Road race — women', kicker: 'WorldTour' },
+              { id: 'cyclo-cross', label: 'Cyclo-cross', kicker: 'Mud' },
             ];
             const picks = lanes
               .map((lane) => {
@@ -211,18 +213,40 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
               );
             }
             return picks.map(({ lane, entry }) => (
-              <li class="pulse-tease-item">
-                <span class="pulse-tease-lane">{lane.label}</span>
-                {entry.data.url ? (
-                  <a href={entry.data.url} target="_blank" rel="noopener noreferrer">
-                    {entry.data.title}
+              <li class={`pulse-tease-item pulse-tease-item--${lane.id}`}>
+                {entry.data.image ? (
+                  <a
+                    class="pulse-tease-media"
+                    href={entry.data.url || '/pulse'}
+                    target={entry.data.url ? '_blank' : undefined}
+                    rel={entry.data.url ? 'noopener noreferrer' : undefined}
+                  >
+                    <img
+                      src={entry.data.image}
+                      alt=""
+                      width="640"
+                      height="400"
+                      loading="lazy"
+                      decoding="async"
+                      referrerpolicy="no-referrer"
+                    />
                   </a>
                 ) : (
-                  <span>{entry.data.title}</span>
+                  <span class={`pulse-tease-media pulse-tease-media--blank`} aria-hidden="true" />
                 )}
-                {entry.data.source ? (
-                  <span class="pulse-tease-source">{entry.data.source}</span>
-                ) : null}
+                <div class="pulse-tease-copy">
+                  <span class="pulse-tease-lane">{lane.kicker}</span>
+                  {entry.data.url ? (
+                    <a class="pulse-tease-title" href={entry.data.url} target="_blank" rel="noopener noreferrer">
+                      {entry.data.title}
+                    </a>
+                  ) : (
+                    <span class="pulse-tease-title">{entry.data.title}</span>
+                  )}
+                  {entry.data.source ? (
+                    <span class="pulse-tease-source">{entry.data.source}</span>
+                  ) : null}
+                </div>
               </li>
             ));
           })()
@@ -232,27 +256,30 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
   </section>
 </BaseLayout>
 
-<style>
+<style is:global>
   .pulse-tease-section {
-    padding-top: 2.5rem;
-    padding-bottom: 3.5rem;
+    padding-top: 2.75rem;
+    padding-bottom: 3.75rem;
     border-top: 1px solid rgba(215, 224, 232, 0.08);
+    background:
+      radial-gradient(ellipse 70% 80% at 10% 0%, rgba(30, 58, 69, 0.28), transparent 55%),
+      radial-gradient(ellipse 50% 60% at 90% 20%, rgba(212, 163, 90, 0.06), transparent 50%);
   }
 
   .pulse-tease {
-    max-width: 42rem;
+    max-width: 56rem;
   }
 
   .pulse-tease-head {
     display: flex;
-    align-items: baseline;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 0.35rem;
+    margin-bottom: 1.35rem;
   }
 
   .pulse-tease-head .eyebrow {
-    margin: 0;
+    margin: 0 0 0.35rem;
   }
 
   .pulse-tease-all {
@@ -260,11 +287,13 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
     font-size: 0.88rem;
     font-weight: 600;
     text-decoration: none;
+    white-space: nowrap;
   }
 
   .pulse-tease-lead {
-    margin: 0 0 1.1rem;
+    margin: 0;
     color: rgba(215, 224, 232, 0.72);
+    max-width: 28rem;
   }
 
   .pulse-tease-list {
@@ -272,33 +301,106 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 0.75rem;
+    gap: 0.9rem;
+  }
+
+  @media (min-width: 800px) {
+    .pulse-tease-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
   }
 
   .pulse-tease-item {
+    --pulse-accent: var(--amber-hot);
     display: grid;
-    gap: 0.2rem;
+    gap: 0.75rem;
+    padding: 0.7rem;
+    border: 1px solid rgba(215, 224, 232, 0.12);
+    border-radius: 0.95rem;
+    background:
+      radial-gradient(ellipse 80% 70% at 0% 0%, rgba(212, 163, 90, 0.12), transparent 55%),
+      rgba(8, 12, 17, 0.45);
+    transition:
+      border-color 180ms ease,
+      transform 220ms ease;
+  }
+
+  .pulse-tease-item--road-women {
+    --pulse-accent: #7eb8c9;
+    background:
+      radial-gradient(ellipse 80% 70% at 0% 0%, rgba(61, 107, 122, 0.28), transparent 55%),
+      rgba(8, 12, 17, 0.45);
+  }
+
+  .pulse-tease-item--cyclo-cross {
+    --pulse-accent: var(--crest-red);
+    background:
+      radial-gradient(ellipse 80% 70% at 0% 0%, rgba(227, 27, 35, 0.14), transparent 55%),
+      rgba(8, 12, 17, 0.45);
+  }
+
+  .pulse-tease-item:hover {
+    border-color: rgba(215, 224, 232, 0.22);
+    transform: translateY(-2px);
+  }
+
+  .pulse-tease-media {
+    display: block;
+    overflow: hidden;
+    border-radius: 0.65rem;
+    aspect-ratio: 16 / 10;
+    background: #121820;
+  }
+
+  .pulse-tease-media--blank {
+    background:
+      linear-gradient(135deg, rgba(215, 224, 232, 0.08), transparent 55%),
+      #121820;
+  }
+
+  .pulse-tease-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .pulse-tease-item:hover .pulse-tease-media img {
+    transform: scale(1.05);
+  }
+
+  .pulse-tease-copy {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0 0.15rem 0.15rem;
   }
 
   .pulse-tease-lane,
   .pulse-tease-source {
-    color: var(--amber);
-    font-size: 0.72rem;
+    color: var(--pulse-accent);
+    font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
   }
 
-  .pulse-tease-item a {
+  .pulse-tease-source {
+    opacity: 0.8;
+  }
+
+  .pulse-tease-title {
     color: var(--paper);
     text-decoration: none;
     font-family: var(--font-display);
     font-size: 1.2rem;
     font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
-  .pulse-tease-item a:hover {
-    color: var(--amber-hot);
+  a.pulse-tease-title:hover {
+    color: var(--pulse-accent);
   }
 
   .hero {

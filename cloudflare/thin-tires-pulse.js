@@ -254,23 +254,25 @@ export function pulseMarkdown(item) {
   return lines.join('\n');
 }
 
-function pulseItemsHtml(list, dateFmt) {
-  if (!list.length) {
-    return `<li class="empty">Quiet in this lane — check back in a couple of days.</li>`;
-  }
+const SECTION_KICKER = {
+  'road-men': 'Peloton',
+  'road-women': 'WorldTour',
+  'cyclo-cross': 'Mud',
+};
+
+function pulseRestItemsHtml(list, dateFmt) {
   return list
     .map((item) => {
       const when = Number.isFinite(Date.parse(item.pubDate))
         ? dateFmt.format(new Date(item.pubDate))
         : '';
-      const img = item.image
-        ? `<img class="pulse-thumb" src="${escapeHtml(item.image)}" alt="" width="320" height="200" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
-        : '';
+      const media = item.image
+        ? `<a class="pulse-media" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">` +
+          `<img class="pulse-thumb" src="${escapeHtml(item.image)}" alt="" width="320" height="200" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></a>`
+        : `<span class="pulse-media pulse-media--blank" aria-hidden="true"></span>`;
       return (
         `<li class="pulse-item">` +
-        (img
-          ? `<a class="pulse-media" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${img}</a>`
-          : '') +
+        media +
         `<div class="pulse-copy">` +
         `<p class="pulse-meta">${escapeHtml([item.source, when].filter(Boolean).join(' · '))}</p>` +
         `<h3 class="pulse-title"><a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></h3>` +
@@ -294,10 +296,41 @@ export function pulseBoardHtml(items) {
   }
   return groups
     .map((group) => {
+      const [lead, ...rest] = group.items;
+      const count =
+        group.items.length === 0
+          ? 'Quiet'
+          : `${group.items.length} ${group.items.length === 1 ? 'story' : 'stories'}`;
+      const kicker = SECTION_KICKER[group.id] || 'Pulse';
+      let feature = `<p class="empty">Quiet in this lane — check back in a couple of days.</p>`;
+      if (lead) {
+        const when = Number.isFinite(Date.parse(lead.pubDate))
+          ? dateFmt.format(new Date(lead.pubDate))
+          : '';
+        const media = lead.image
+          ? `<a class="pulse-feature-media" href="${escapeHtml(lead.link)}" target="_blank" rel="noopener noreferrer">` +
+            `<img class="pulse-feature-img" src="${escapeHtml(lead.image)}" alt="" width="1200" height="675" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></a>`
+          : `<div class="pulse-feature-media pulse-feature-media--blank" aria-hidden="true"></div>`;
+        feature =
+          `<article class="pulse-feature">` +
+          media +
+          `<div class="pulse-feature-copy">` +
+          `<p class="pulse-meta">${escapeHtml([lead.source, when].filter(Boolean).join(' · '))}</p>` +
+          `<h3 class="pulse-feature-title"><a href="${escapeHtml(lead.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(lead.title)}</a></h3>` +
+          (lead.note ? `<p class="pulse-note">${escapeHtml(lead.note)}</p>` : '') +
+          `</div></article>`;
+      }
+      const restList = rest.length
+        ? `<ol class="pulse-list">${pulseRestItemsHtml(rest, dateFmt)}</ol>`
+        : '';
       return (
-        `<section class="pulse-block" data-pulse-section="${escapeHtml(group.id)}" aria-labelledby="pulse-${escapeHtml(group.id)}">` +
+        `<section class="pulse-block pulse-block--${escapeHtml(group.id)}" data-pulse-section="${escapeHtml(group.id)}" aria-labelledby="pulse-${escapeHtml(group.id)}">` +
+        `<header class="pulse-lane-head"><div>` +
+        `<p class="pulse-lane-kicker">${escapeHtml(kicker)}</p>` +
         `<h2 id="pulse-${escapeHtml(group.id)}" class="pulse-heading">${escapeHtml(group.label)}</h2>` +
-        `<ol class="pulse-list">${pulseItemsHtml(group.items, dateFmt)}</ol>` +
+        `</div><p class="pulse-lane-count">${escapeHtml(count)}</p></header>` +
+        feature +
+        restList +
         `</section>`
       );
     })
@@ -313,19 +346,32 @@ export function pulseTeaseHtml(items) {
   const groups = groupPulseBySection(items);
   const picks = [];
   for (const group of groups) {
-    if (group.items[0]) picks.push({ ...group.items[0], sectionLabel: group.label });
+    if (group.items[0]) {
+      picks.push({
+        ...group.items[0],
+        sectionId: group.id,
+        sectionLabel: group.label,
+        kicker: SECTION_KICKER[group.id] || group.label,
+      });
+    }
   }
   if (!picks.length) {
     return `<li class="empty"><a href="/pulse">Thin tires</a> — road and CX when it lands.</li>`;
   }
   return picks
     .map((item) => {
+      const media = item.image
+        ? `<a class="pulse-tease-media" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">` +
+          `<img src="${escapeHtml(item.image)}" alt="" width="640" height="400" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></a>`
+        : `<span class="pulse-tease-media pulse-tease-media--blank" aria-hidden="true"></span>`;
       return (
-        `<li class="pulse-tease-item">` +
-        `<span class="pulse-tease-lane">${escapeHtml(item.sectionLabel || sectionLabel(item.section))}</span>` +
-        `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>` +
-        `<span class="pulse-tease-source">${escapeHtml(item.source || '')}</span>` +
-        `</li>`
+        `<li class="pulse-tease-item pulse-tease-item--${escapeHtml(item.sectionId || 'road-men')}">` +
+        media +
+        `<div class="pulse-tease-copy">` +
+        `<span class="pulse-tease-lane">${escapeHtml(item.kicker || sectionLabel(item.section))}</span>` +
+        `<a class="pulse-tease-title" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>` +
+        (item.source ? `<span class="pulse-tease-source">${escapeHtml(item.source)}</span>` : '') +
+        `</div></li>`
       );
     })
     .join('');

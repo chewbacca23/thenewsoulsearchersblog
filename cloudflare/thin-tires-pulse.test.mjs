@@ -147,10 +147,19 @@ describe('pulse html', () => {
         section: 'road-women',
       },
     ];
-    assert.match(pulseBoardHtml(items), /Road race — men/);
-    assert.match(pulseBoardHtml(items), /Road race — women/);
-    assert.match(pulseBoardHtml(items), /A quiet breakaway/);
-    assert.match(pulseTeaseHtml(items), /pulse-tease-lane/);
+    const board = pulseBoardHtml(items);
+    assert.match(board, /Road race — men/);
+    assert.match(board, /Road race — women/);
+    assert.match(board, /A quiet breakaway/);
+    assert.match(board, /pulse-feature/);
+    assert.match(board, /pulse-lane-kicker/);
+    assert.match(board, /Peloton/);
+    assert.match(board, /WorldTour/);
+    const tease = pulseTeaseHtml(items);
+    assert.match(tease, /pulse-tease-lane/);
+    assert.match(tease, /pulse-tease-item--road-men/);
+    assert.match(tease, /pulse-tease-media/);
+    assert.match(tease, /Peloton/);
     const filled = fillPulseInHtml(
       '<div data-pulse-board><p class="empty">x</p></div><ol data-pulse-tease><li class="empty">y</li></ol>',
       items,
