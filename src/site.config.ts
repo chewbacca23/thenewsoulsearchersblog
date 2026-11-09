@@ -9,7 +9,13 @@ export const site = {
   url: 'https://thenewsoulsearchers.de',
   email: 'hello@thenewsoulsearchers.de',
   locale: 'en',
-  domains: ['thenewsoulsearchers.de', 'www.thenewsoulsearchers.de'],
+  /** Public hosts that serve this same Worker (.de stays canonical for SEO / admin). */
+  domains: [
+    'thenewsoulsearchers.de',
+    'www.thenewsoulsearchers.de',
+    'thenewsoulsearchers.com',
+    'www.thenewsoulsearchers.com',
+  ],
 
   /** Crest PNG — lighter on the wire than the old base64-wrapped SVG. */
   logo: '/logo.png',

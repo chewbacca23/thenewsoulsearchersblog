@@ -2,7 +2,30 @@ import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 import worker, { testables } from './cms-oauth-worker.js';
 
-const { handleAuth, handleCallback, oauthCreds, statusPage } = testables;
+const {
+  handleAuth,
+  handleCallback,
+  oauthCreds,
+  statusPage,
+  originAllowed,
+  redirectComEditorToDe,
+} = testables;
+
+describe('dot-com twin domain', () => {
+  it('allows .com origins for public APIs', () => {
+    assert.equal(originAllowed('https://thenewsoulsearchers.com'), true);
+    assert.equal(originAllowed('https://www.thenewsoulsearchers.com'), true);
+    assert.equal(originAllowed('https://evil.example'), false);
+  });
+
+  it('sends .com editor paths over to .de', () => {
+    const res = redirectComEditorToDe(new URL('https://thenewsoulsearchers.com/admin/'));
+    assert.equal(res.status, 302);
+    assert.equal(res.headers.get('location'), 'https://thenewsoulsearchers.de/admin/');
+    assert.equal(redirectComEditorToDe(new URL('https://thenewsoulsearchers.com/pulse')), null);
+    assert.equal(redirectComEditorToDe(new URL('https://thenewsoulsearchers.de/admin/')), null);
+  });
+});
 
 const creds = { id: 'client-id-test', secret: 'client-secret-test' };
 

@@ -291,6 +291,26 @@ Use this repo **`chewbacca23/thenewsoulsearchersblog`** (blog only — no subfol
 5. **Save** → trigger deploy
 6. **Custom domains** → `thenewsoulsearchers.de` (+ optional `www`)
 
+---
+
+## Also serve thenewsoulsearchers.com
+
+Same Worker, same site. `.de` stays the canonical home (SEO, RSS, GitHub editor login).
+`.com` serves the public pages; `/admin`, `/auth`, `/callback`, `/looks`, and `/members` on `.com` redirect to `.de`.
+
+### One-time Cloudflare steps
+
+1. Put **`thenewsoulsearchers.com`** on Cloudflare (Add site → free plan is fine). Point the registrar nameservers to the ones Cloudflare shows.
+2. Wait until the zone is **Active**.
+3. [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **`thenewsoulsearchersblogc`**
+4. **Settings** → **Domains & Routes** → **Add** → **Custom Domain**
+5. Add **`thenewsoulsearchers.com`**, then again **`www.thenewsoulsearchers.com`**
+6. Cloudflare creates the DNS + certificate. Give it a minute, then open:
+   - https://thenewsoulsearchers.com/
+   - https://www.thenewsoulsearchers.com/
+
+No need for a second Worker or a second GitHub repo. Mail stays `@thenewsoulsearchers.de`.
+
 ## If you already deployed from plasticparticles-shop
 
 Your old project pointed at repo `plasticparticles-shop` with root directory **`soul-searchers`**.

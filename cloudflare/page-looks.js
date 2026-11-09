@@ -436,6 +436,8 @@ const FROM_HOME = {
 const OWN_HOSTS = new Set([
   'thenewsoulsearchers.de',
   'www.thenewsoulsearchers.de',
+  'thenewsoulsearchers.com',
+  'www.thenewsoulsearchers.com',
   'localhost',
   '127.0.0.1',
 ]);
@@ -1436,6 +1438,8 @@ export async function handleLooksRequest(request, env) {
       const ok =
         host === 'thenewsoulsearchers.de' ||
         host === 'www.thenewsoulsearchers.de' ||
+        host === 'thenewsoulsearchers.com' ||
+        host === 'www.thenewsoulsearchers.com' ||
         host.endsWith('.workers.dev') ||
         host === 'localhost' ||
         host === '127.0.0.1';

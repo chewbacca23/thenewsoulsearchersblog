@@ -49,6 +49,16 @@ import {
 const PROVIDER = 'github';
 const SCOPE = 'public_repo,user';
 
+/** Public hosts that serve this Worker. .de stays the home for SEO + the editor. */
+const SITE_HOSTS = new Set([
+  'thenewsoulsearchers.de',
+  'www.thenewsoulsearchers.de',
+  'thenewsoulsearchers.com',
+  'www.thenewsoulsearchers.com',
+]);
+const PRIMARY_HOST = 'thenewsoulsearchers.de';
+const COM_HOSTS = new Set(['thenewsoulsearchers.com', 'www.thenewsoulsearchers.com']);
+
 const ID_PATTERNS = [
   /^GITHUB_OAUTH_CLIENT_ID$/i,
   /^GITHUB_CLIENT_ID$/i,
@@ -220,15 +230,36 @@ function originAllowed(origin) {
     if (protocol !== 'https:' && hostname !== 'localhost' && hostname !== '127.0.0.1') {
       return false;
     }
-    if (hostname === 'thenewsoulsearchers.de' || hostname === 'www.thenewsoulsearchers.de') {
-      return true;
-    }
+    if (SITE_HOSTS.has(hostname)) return true;
     if (hostname.endsWith('.workers.dev')) return true;
     if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
     return false;
   } catch {
     return false;
   }
+}
+
+/**
+ * Keep GitHub OAuth + Looks login on .de so one callback URL stays enough.
+ * @param {URL} url
+ * @returns {Response | null}
+ */
+function redirectComEditorToDe(url) {
+  if (!COM_HOSTS.has(url.hostname)) return null;
+  const path = url.pathname;
+  const editorPath =
+    path === '/admin' ||
+    path.startsWith('/admin/') ||
+    path === '/auth' ||
+    path === '/callback' ||
+    path === '/looks' ||
+    path.startsWith('/looks/') ||
+    path === '/members';
+  if (!editorPath) return null;
+  const next = new URL(url.toString());
+  next.protocol = 'https:';
+  next.hostname = PRIMARY_HOST;
+  return Response.redirect(next.toString(), 302);
 }
 
 /**
@@ -351,6 +382,8 @@ function callbackHtml(status, content) {
       return (
         host === "thenewsoulsearchers.de" ||
         host === "www.thenewsoulsearchers.de" ||
+        host === "thenewsoulsearchers.com" ||
+        host === "www.thenewsoulsearchers.com" ||
         host.endsWith(".workers.dev") ||
         host === "localhost" ||
         host === "127.0.0.1"
@@ -452,6 +485,9 @@ export default {
   async fetch(request, env, ctx) {
     try {
       const url = new URL(request.url);
+
+      const comEditor = redirectComEditorToDe(url);
+      if (comEditor) return comEditor;
 
       if (url.pathname === '/cms-status') return await statusPage(env);
 
@@ -555,6 +591,9 @@ export default {
 export const testables = {
   oauthCreds,
   originAllowed,
+  redirectComEditorToDe,
+  SITE_HOSTS,
+  PRIMARY_HOST,
   callbackUrl,
   handleAuth,
   handleCallback,
