@@ -153,6 +153,7 @@ describe('pulse html', () => {
     assert.match(board, /A quiet breakaway/);
     assert.match(board, /pulse-feature/);
     assert.match(board, /pulse-lane-kicker/);
+    assert.match(board, /role="tabpanel"/);
     assert.match(board, /Peloton/);
     assert.match(board, /WorldTour/);
     const tease = pulseTeaseHtml(items);
@@ -161,12 +162,13 @@ describe('pulse html', () => {
     assert.match(tease, /pulse-tease-media/);
     assert.match(tease, /Peloton/);
     const filled = fillPulseInHtml(
-      '<div data-pulse-board><p class="empty">x</p></div><ol data-pulse-tease><li class="empty">y</li></ol>',
+      '<div data-pulse-board><div class="keep-me"><p class="empty">x</p></div></div><ol data-pulse-tease><li class="empty">y</li></ol>',
       items,
     );
     assert.match(filled, /data-pulse-board/);
     assert.match(filled, /A quiet breakaway/);
     assert.match(filled, /data-pulse-tease/);
+    assert.doesNotMatch(filled, /keep-me/);
     assert.match(pulseMarkdown(items[0]), /section: road-men/);
   });
 });

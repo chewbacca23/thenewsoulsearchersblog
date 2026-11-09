@@ -324,7 +324,7 @@ export function pulseBoardHtml(items) {
         ? `<ol class="pulse-list">${pulseRestItemsHtml(rest, dateFmt)}</ol>`
         : '';
       return (
-        `<section class="pulse-block pulse-block--${escapeHtml(group.id)}" data-pulse-section="${escapeHtml(group.id)}" aria-labelledby="pulse-${escapeHtml(group.id)}">` +
+        `<section class="pulse-block pulse-block--${escapeHtml(group.id)}" data-pulse-section="${escapeHtml(group.id)}" id="pulse-panel-${escapeHtml(group.id)}" role="tabpanel" aria-labelledby="pulse-tab-${escapeHtml(group.id)}">` +
         `<header class="pulse-lane-head"><div>` +
         `<p class="pulse-lane-kicker">${escapeHtml(kicker)}</p>` +
         `<h2 id="pulse-${escapeHtml(group.id)}" class="pulse-heading">${escapeHtml(group.label)}</h2>` +
@@ -377,18 +377,50 @@ export function pulseTeaseHtml(items) {
     .join('');
 }
 
+function replaceTaggedElement(html, tag, attrNeedle, innerHtml) {
+  const source = String(html);
+  const openRe = new RegExp(`<${tag}\\b([^>]*${attrNeedle}[^>]*)>`, 'i');
+  const open = openRe.exec(source);
+  if (!open) return source;
+  const startOpen = open.index;
+  const afterOpen = startOpen + open[0].length;
+  const openTag = new RegExp(`<${tag}\\b`, 'gi');
+  const closeTag = new RegExp(`</${tag}\\s*>`, 'gi');
+  openTag.lastIndex = afterOpen;
+  closeTag.lastIndex = afterOpen;
+  let depth = 1;
+  let cursor = afterOpen;
+  while (depth > 0) {
+    openTag.lastIndex = cursor;
+    closeTag.lastIndex = cursor;
+    const nextOpen = openTag.exec(source);
+    const nextClose = closeTag.exec(source);
+    if (!nextClose) break;
+    if (nextOpen && nextOpen.index < nextClose.index) {
+      depth += 1;
+      cursor = nextOpen.index + nextOpen[0].length;
+      continue;
+    }
+    depth -= 1;
+    cursor = nextClose.index + nextClose[0].length;
+    if (depth === 0) {
+      return (
+        source.slice(0, startOpen) +
+        `<${tag}${open[1]}>${innerHtml}</${tag}>` +
+        source.slice(cursor)
+      );
+    }
+  }
+  return source;
+}
+
 export function fillPulseInHtml(html, items) {
   const list = Array.isArray(items) ? items : [];
-  return String(html)
-    .replace(
-      /<div([^>]*data-pulse-board[^>]*)>[\s\S]*?<\/div>/,
-      `<div$1>${pulseBoardHtml(list)}</div>`,
-    )
-    .replace(/<ol([^>]*data-pulse-list[^>]*)>[\s\S]*?<\/ol>/, `<ol$1>${pulseBoardHtml(list)}</ol>`)
-    .replace(
-      /<ol([^>]*data-pulse-tease[^>]*)>[\s\S]*?<\/ol>/,
-      `<ol$1>${pulseTeaseHtml(list)}</ol>`,
-    );
+  let out = String(html);
+  out = replaceTaggedElement(out, 'div', 'data-pulse-board', pulseBoardHtml(list));
+  out = replaceTaggedElement(out, 'ol', 'data-pulse-list', pulseBoardHtml(list));
+  out = replaceTaggedElement(out, 'ol', 'data-pulse-tease', pulseTeaseHtml(list));
+  return out;
 }
 
 function githubToken(env) {

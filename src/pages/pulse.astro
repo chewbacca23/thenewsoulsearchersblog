@@ -4,9 +4,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { newestFirst } from '../lib/newest';
 
 const SECTION_META = [
-  { id: 'road-men', label: 'Road race — men', kicker: 'Peloton' },
-  { id: 'road-women', label: 'Road race — women', kicker: 'WorldTour' },
-  { id: 'cyclo-cross', label: 'Cyclo-cross', kicker: 'Mud' },
+  { id: 'road-men', label: 'Road race — men', kicker: 'Peloton', short: 'Road men' },
+  { id: 'road-women', label: 'Road race — women', kicker: 'WorldTour', short: 'Road women' },
+  { id: 'cyclo-cross', label: 'Cyclo-cross', kicker: 'Mud', short: 'Cyclo-cross' },
 ] as const;
 
 const entries = newestFirst(
@@ -25,6 +25,8 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
   year: 'numeric',
   timeZone: 'Europe/Berlin',
 });
+
+const hasStories = groups.some((group) => group.items.length > 0);
 ---
 
 <BaseLayout
@@ -36,131 +38,196 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
       <p class="eyebrow reveal">Thin tires</p>
       <h1 class="section-title reveal reveal-delay-1">From the peloton</h1>
       <p class="section-lead reveal reveal-delay-2">
-        Three lanes of hype: road race men, road race women, cyclo-cross.<br />
+        Slide through the three lanes — road men, road women, cyclo-cross.<br />
         Fresh every couple of days — open a headline, or rewrite any piece in the editor.
       </p>
 
-      <div class="pulse-board reveal reveal-delay-3" data-pulse-board>
+      <div class="pulse-deck reveal reveal-delay-3" data-pulse-deck>
         {
-          groups.every((group) => group.items.length === 0) ? (
-            <p class="empty">Thin tires news lands here every couple of days.</p>
-          ) : (
-            groups.map((group) => {
-              const [lead, ...rest] = group.items;
-              return (
-                <section
-                  class={`pulse-block pulse-block--${group.id}`}
-                  data-pulse-section={group.id}
-                  aria-labelledby={`pulse-${group.id}`}
+          hasStories ? (
+            <div class="pulse-tabs" role="tablist" aria-label="Pulse lanes">
+              {groups.map((group, index) => (
+                <button
+                  type="button"
+                  class={`pulse-tab pulse-tab--${group.id}`}
+                  role="tab"
+                  id={`pulse-tab-${group.id}`}
+                  data-pulse-tab={group.id}
+                  aria-controls={`pulse-panel-${group.id}`}
+                  aria-selected={index === 0 ? 'true' : 'false'}
+                  tabindex={index === 0 ? 0 : -1}
                 >
-                  <header class="pulse-lane-head">
-                    <div>
-                      <p class="pulse-lane-kicker">{group.kicker}</p>
-                      <h2 id={`pulse-${group.id}`} class="pulse-heading">
-                        {group.label}
-                      </h2>
-                    </div>
-                    <p class="pulse-lane-count">
-                      {group.items.length === 0
-                        ? 'Quiet'
-                        : `${group.items.length} ${group.items.length === 1 ? 'story' : 'stories'}`}
-                    </p>
-                  </header>
+                  <span class="pulse-tab-kicker">{group.kicker}</span>
+                  <span class="pulse-tab-label">{group.short}</span>
+                </button>
+              ))}
+            </div>
+          ) : null
+        }
 
-                  {lead ? (
-                    <article class="pulse-feature">
-                      {lead.data.image ? (
-                        <a
-                          class="pulse-feature-media"
-                          href={lead.data.url || '#'}
-                          target={lead.data.url ? '_blank' : undefined}
-                          rel={lead.data.url ? 'noopener noreferrer' : undefined}
-                        >
-                          <img
-                            class="pulse-feature-img"
-                            src={lead.data.image}
-                            alt=""
-                            width="1200"
-                            height="675"
-                            loading="lazy"
-                            decoding="async"
-                            referrerpolicy="no-referrer"
-                          />
-                        </a>
-                      ) : (
-                        <div class="pulse-feature-media pulse-feature-media--blank" aria-hidden="true" />
-                      )}
-                      <div class="pulse-feature-copy">
-                        <p class="pulse-meta">
-                          {[lead.data.source, dateFmt.format(lead.data.pubDate)].filter(Boolean).join(' · ')}
+        <div class="pulse-rail">
+          {
+            hasStories ? (
+              <button
+                type="button"
+                class="pulse-nav pulse-nav--prev"
+                data-pulse-prev
+                aria-label="Previous lane"
+              >
+                <span aria-hidden="true">‹</span>
+              </button>
+            ) : null
+          }
+
+          <div class="pulse-board" data-pulse-board>
+            {
+              !hasStories ? (
+                <p class="empty">Thin tires news lands here every couple of days.</p>
+              ) : (
+                groups.map((group, index) => {
+                  const [lead, ...rest] = group.items;
+                  return (
+                    <section
+                      class={`pulse-block pulse-block--${group.id}`}
+                      data-pulse-section={group.id}
+                      id={`pulse-panel-${group.id}`}
+                      role="tabpanel"
+                      aria-labelledby={`pulse-tab-${group.id}`}
+                      aria-hidden={index === 0 ? 'false' : 'true'}
+                    >
+                      <header class="pulse-lane-head">
+                        <div>
+                          <p class="pulse-lane-kicker">{group.kicker}</p>
+                          <h2 id={`pulse-${group.id}`} class="pulse-heading">
+                            {group.label}
+                          </h2>
+                        </div>
+                        <p class="pulse-lane-count">
+                          {group.items.length === 0
+                            ? 'Quiet'
+                            : `${group.items.length} ${group.items.length === 1 ? 'story' : 'stories'}`}
                         </p>
-                        <h3 class="pulse-feature-title">
-                          {lead.data.url ? (
-                            <a href={lead.data.url} target="_blank" rel="noopener noreferrer">
-                              {lead.data.title}
+                      </header>
+
+                      {lead ? (
+                        <article class="pulse-feature">
+                          {lead.data.image ? (
+                            <a
+                              class="pulse-feature-media"
+                              href={lead.data.url || '#'}
+                              target={lead.data.url ? '_blank' : undefined}
+                              rel={lead.data.url ? 'noopener noreferrer' : undefined}
+                            >
+                              <img
+                                class="pulse-feature-img"
+                                src={lead.data.image}
+                                alt=""
+                                width="1200"
+                                height="675"
+                                loading={index === 0 ? 'eager' : 'lazy'}
+                                decoding="async"
+                                referrerpolicy="no-referrer"
+                              />
                             </a>
                           ) : (
-                            lead.data.title
+                            <div class="pulse-feature-media pulse-feature-media--blank" aria-hidden="true" />
                           )}
-                        </h3>
-                        {lead.data.note ? <p class="pulse-note">{lead.data.note}</p> : null}
-                      </div>
-                    </article>
-                  ) : (
-                    <p class="empty">Quiet in this lane — check back in a couple of days.</p>
-                  )}
+                          <div class="pulse-feature-copy">
+                            <p class="pulse-meta">
+                              {[lead.data.source, dateFmt.format(lead.data.pubDate)]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </p>
+                            <h3 class="pulse-feature-title">
+                              {lead.data.url ? (
+                                <a href={lead.data.url} target="_blank" rel="noopener noreferrer">
+                                  {lead.data.title}
+                                </a>
+                              ) : (
+                                lead.data.title
+                              )}
+                            </h3>
+                            {lead.data.note ? <p class="pulse-note">{lead.data.note}</p> : null}
+                          </div>
+                        </article>
+                      ) : (
+                        <p class="empty">Quiet in this lane — check back in a couple of days.</p>
+                      )}
 
-                  {rest.length > 0 ? (
-                    <ol class="pulse-list">
-                      {rest.map((entry) => {
-                        const { title, source, url, image, note, pubDate } = entry.data;
-                        const when = dateFmt.format(pubDate);
-                        const href = url || '#';
-                        return (
-                          <li class="pulse-item">
-                            {image ? (
-                              <a
-                                class="pulse-media"
-                                href={href}
-                                target={url ? '_blank' : undefined}
-                                rel={url ? 'noopener noreferrer' : undefined}
-                              >
-                                <img
-                                  class="pulse-thumb"
-                                  src={image}
-                                  alt=""
-                                  width="320"
-                                  height="200"
-                                  loading="lazy"
-                                  decoding="async"
-                                  referrerpolicy="no-referrer"
-                                />
-                              </a>
-                            ) : (
-                              <span class="pulse-media pulse-media--blank" aria-hidden="true" />
-                            )}
-                            <div class="pulse-copy">
-                              <p class="pulse-meta">{[source, when].filter(Boolean).join(' · ')}</p>
-                              <h3 class="pulse-title">
-                                {url ? (
-                                  <a href={url} target="_blank" rel="noopener noreferrer">
-                                    {title}
+                      {rest.length > 0 ? (
+                        <ol class="pulse-list">
+                          {rest.map((entry) => {
+                            const { title, source, url, image, note, pubDate } = entry.data;
+                            const when = dateFmt.format(pubDate);
+                            const href = url || '#';
+                            return (
+                              <li class="pulse-item">
+                                {image ? (
+                                  <a
+                                    class="pulse-media"
+                                    href={href}
+                                    target={url ? '_blank' : undefined}
+                                    rel={url ? 'noopener noreferrer' : undefined}
+                                  >
+                                    <img
+                                      class="pulse-thumb"
+                                      src={image}
+                                      alt=""
+                                      width="320"
+                                      height="200"
+                                      loading="lazy"
+                                      decoding="async"
+                                      referrerpolicy="no-referrer"
+                                    />
                                   </a>
                                 ) : (
-                                  title
+                                  <span class="pulse-media pulse-media--blank" aria-hidden="true" />
                                 )}
-                              </h3>
-                              {note ? <p class="pulse-note">{note}</p> : null}
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  ) : null}
-                </section>
-              );
-            })
-          )
+                                <div class="pulse-copy">
+                                  <p class="pulse-meta">{[source, when].filter(Boolean).join(' · ')}</p>
+                                  <h3 class="pulse-title">
+                                    {url ? (
+                                      <a href={url} target="_blank" rel="noopener noreferrer">
+                                        {title}
+                                      </a>
+                                    ) : (
+                                      title
+                                    )}
+                                  </h3>
+                                  {note ? <p class="pulse-note">{note}</p> : null}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ol>
+                      ) : null}
+                    </section>
+                  );
+                })
+              )
+            }
+          </div>
+
+          {
+            hasStories ? (
+              <button
+                type="button"
+                class="pulse-nav pulse-nav--next"
+                data-pulse-next
+                aria-label="Next lane"
+              >
+                <span aria-hidden="true">›</span>
+              </button>
+            ) : null
+          }
+        </div>
+
+        {
+          hasStories ? (
+            <p class="pulse-swipe-hint" data-pulse-hint>
+              Swipe or use the arrows — men, then women, then cyclo-cross.
+            </p>
+          ) : null
         }
       </div>
     </div>
@@ -172,15 +239,153 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
     max-width: 56rem;
   }
 
+  .pulse-deck {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .pulse-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .pulse-tab {
+    appearance: none;
+    margin: 0;
+    padding: 0.7rem 0.75rem 0.75rem;
+    border: 1px solid rgba(215, 224, 232, 0.12);
+    border-radius: 0.85rem;
+    background: rgba(8, 12, 17, 0.35);
+    color: rgba(215, 224, 232, 0.72);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .pulse-tab--road-men {
+    --pulse-accent: var(--amber-hot);
+  }
+
+  .pulse-tab--road-women {
+    --pulse-accent: #7eb8c9;
+  }
+
+  .pulse-tab--cyclo-cross {
+    --pulse-accent: var(--crest-red);
+  }
+
+  .pulse-tab:hover {
+    border-color: rgba(215, 224, 232, 0.22);
+    color: var(--paper);
+  }
+
+  .pulse-tab[aria-selected='true'] {
+    border-color: color-mix(in srgb, var(--pulse-accent) 55%, transparent);
+    background:
+      radial-gradient(ellipse 90% 80% at 0% 0%, color-mix(in srgb, var(--pulse-accent) 22%, transparent), transparent 60%),
+      rgba(8, 12, 17, 0.55);
+    color: var(--paper);
+    transform: translateY(-1px);
+  }
+
+  .pulse-tab-kicker {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: var(--pulse-accent);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .pulse-tab-label {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .pulse-rail {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0.55rem;
+  }
+
+  .pulse-nav {
+    appearance: none;
+    align-self: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(215, 224, 232, 0.14);
+    border-radius: 999px;
+    background: rgba(8, 12, 17, 0.65);
+    color: var(--paper);
+    font-size: 1.55rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      opacity 180ms ease;
+  }
+
+  .pulse-nav:hover:not(:disabled) {
+    border-color: rgba(215, 224, 232, 0.28);
+    background: rgba(18, 26, 34, 0.9);
+  }
+
+  .pulse-nav:disabled {
+    opacity: 0.28;
+    cursor: default;
+  }
+
+  @media (max-width: 640px) {
+    .pulse-nav {
+      display: none;
+    }
+
+    .pulse-rail {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   .pulse-board {
     display: grid;
-    gap: 2.75rem;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    gap: 0;
+    margin: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .pulse-board::-webkit-scrollbar {
+    display: none;
   }
 
   .pulse-block {
     --pulse-accent: var(--amber);
     --pulse-glow: rgba(212, 163, 90, 0.18);
     position: relative;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    min-width: 0;
     padding: 1.35rem 1.25rem 1.4rem;
     border: 1px solid rgba(215, 224, 232, 0.12);
     border-radius: 1.1rem;
@@ -410,8 +615,125 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', {
     max-width: 36rem;
   }
 
+  .pulse-swipe-hint {
+    margin: 0;
+    color: rgba(215, 224, 232, 0.5);
+    font-size: 0.82rem;
+    letter-spacing: 0.02em;
+  }
+
   .pulse-page .empty {
     margin: 0;
     color: rgba(215, 224, 232, 0.68);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse-board {
+      scroll-behavior: auto;
+    }
+
+    .pulse-feature-img,
+    .pulse-thumb,
+    .pulse-tab {
+      transition: none;
+    }
+  }
 </style>
+
+<script>
+  function initPulseDeck(root) {
+    const board = root.querySelector('[data-pulse-board]');
+    if (!board) return;
+
+    const blocks = () => [...board.querySelectorAll('.pulse-block')];
+    const tabs = [...root.querySelectorAll('[data-pulse-tab]')];
+    const prev = root.querySelector('[data-pulse-prev]');
+    const next = root.querySelector('[data-pulse-next]');
+    if (!blocks().length) return;
+
+    let index = 0;
+    let ticking = false;
+
+    const clamp = (value) => Math.max(0, Math.min(blocks().length - 1, value));
+
+    const syncUi = () => {
+      const list = blocks();
+      list.forEach((block, i) => {
+        block.setAttribute('aria-hidden', i === index ? 'false' : 'true');
+      });
+      tabs.forEach((tab, i) => {
+        const on = i === index;
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        tab.tabIndex = on ? 0 : -1;
+      });
+      if (prev) prev.disabled = index <= 0;
+      if (next) next.disabled = index >= list.length - 1;
+    };
+
+    const goTo = (nextIndex, { focusTab = false } = {}) => {
+      const list = blocks();
+      index = clamp(nextIndex);
+      const target = list[index];
+      if (!target) return;
+      board.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
+      syncUi();
+      if (focusTab && tabs[index]) tabs[index].focus();
+    };
+
+    const readIndexFromScroll = () => {
+      const list = blocks();
+      if (!list.length) return 0;
+      const left = board.scrollLeft;
+      let best = 0;
+      let bestDist = Infinity;
+      list.forEach((block, i) => {
+        const dist = Math.abs(block.offsetLeft - left);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = i;
+        }
+      });
+      return best;
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => goTo(i));
+      tab.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          goTo(index + 1, { focusTab: true });
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          goTo(index - 1, { focusTab: true });
+        } else if (event.key === 'Home') {
+          event.preventDefault();
+          goTo(0, { focusTab: true });
+        } else if (event.key === 'End') {
+          event.preventDefault();
+          goTo(blocks().length - 1, { focusTab: true });
+        }
+      });
+    });
+
+    prev?.addEventListener('click', () => goTo(index - 1));
+    next?.addEventListener('click', () => goTo(index + 1));
+
+    board.addEventListener(
+      'scroll',
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          index = readIndexFromScroll();
+          syncUi();
+          ticking = false;
+        });
+      },
+      { passive: true },
+    );
+
+    syncUi();
+  }
+
+  document.querySelectorAll('[data-pulse-deck]').forEach(initPulseDeck);
+</script>
