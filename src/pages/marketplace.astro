@@ -4,13 +4,13 @@ import { site } from '../site.config';
 ---
 
 <BaseLayout
-  title="Fresh stuff"
-  description="Fresh stuff. A crowd of riders. Ride together, or put down a tire, a saddle, a frame."
+  title="The Table"
+  description="The Table. Come sit. Ride together, or put down a tire, a saddle, a frame."
 >
   <section class="section">
     <div class="site-shell hooks">
-      <p class="eyebrow">The floor</p>
-      <h1 class="section-title">Fresh stuff</h1>
+      <p class="eyebrow">Come sit</p>
+      <h1 class="section-title">The Table</h1>
       <p class="section-lead">
         Room for a thousand. Berlin is the centre of this little universe.<br />
         When someone from Nice or a train joins, they land on the map around it. Each dot is a
@@ -21,7 +21,7 @@ import { site } from '../site.config';
       </p>
 
       <section class="wares" aria-label="What you can put down">
-        <p class="wares-kicker">On the table</p>
+        <p class="wares-kicker">What’s on it</p>
         <ul class="wares-row">
           <li>
             <button
@@ -309,13 +309,13 @@ import { site } from '../site.config';
         <button type="button" class="cookie-note-ok" id="cookie-note-ok">Got it, brother</button>
       </aside>
 
-      <p class="floor-kicker">The floor</p>
+      <p class="floor-kicker">Around the table</p>
       <ol id="hook-list" class="market">
-        <li class="empty">The floor is empty. Open the first stall.</li>
+        <li class="empty">The table is quiet. Open the first place.</li>
       </ol>
 
       <div id="pin-success" class="success" hidden>
-        <h2>It’s on the floor</h2>
+        <h2>It’s on the table</h2>
         <p>
           If you left a mail, offers can also land in your inbox. If you left a Telegram username or
           a phone, brothers can open that messenger to you. The handle and digits stay off the map,
@@ -457,9 +457,9 @@ import { site } from '../site.config';
           <span>Company</span>
           <input type="text" name="fax_number_leave_blank" tabindex="-1" autocomplete="off" />
         </label>
-        <button class="btn btn-primary" type="submit">Put it on the floor</button>
+        <button class="btn btn-primary" type="submit">Put it on the table</button>
         <p class="cookie-pin-hint">
-          Putting yourself on the floor leaves that light cookie and local memory, so coming back
+          Putting yourself at the table leaves that light cookie and local memory, so coming back
           still finds you. More in the note up top, and on the
           <a href="/impressum">imprint</a>.
         </p>
@@ -1415,7 +1415,7 @@ import { site } from '../site.config';
             var cards = cardsFrom(lastPayload);
             list.innerHTML = cards.length
               ? cards.map(renderCard).join('')
-              : '<li class="empty">The floor is empty. Open the first stall.</li>';
+              : '<li class="empty">The table is quiet. Open the first place.</li>';
           }
           if (dockKey) renderChatDock();
           showCallsForYou();
@@ -1455,7 +1455,7 @@ import { site } from '../site.config';
         : isStall && card.offerCount
           ? '<p class="card-for">' +
             card.offerCount +
-            (card.offerCount === 1 ? ' offer on the floor' : ' offers on the floor') +
+            (card.offerCount === 1 ? ' offer on the table' : ' offers on the table') +
             '</p>'
           : '';
       return (
@@ -1839,7 +1839,7 @@ import { site } from '../site.config';
             (person.key === openKey ? 'true' : 'false') +
             '" aria-label="' +
             esc(person.name) +
-            (fresh ? ', new on the floor' : '') +
+            (fresh ? ', new at the table' : '') +
             '">' +
             '<span class="dot-mark"></span>' +
             '<span class="dot-name">' +
@@ -1864,7 +1864,7 @@ import { site } from '../site.config';
       if (!list) return;
       var cards = cardsFrom(lastPayload);
       if (!cards.length) {
-        list.innerHTML = '<li class="empty">The floor is empty. Open the first stall.</li>';
+        list.innerHTML = '<li class="empty">The table is quiet. Open the first place.</li>';
         return;
       }
       list.innerHTML = cards.map(renderCard).join('');
@@ -1900,7 +1900,7 @@ import { site } from '../site.config';
           if (hintBox && data && data.mailWired === false) {
             hintBox.hidden = false;
             hintBox.textContent =
-              'Mail is not wired yet. Offers still show on the floor.';
+              'Mail is not wired yet. Offers still show on the table.';
           }
           render(data);
           fillFormsFromMemory();
