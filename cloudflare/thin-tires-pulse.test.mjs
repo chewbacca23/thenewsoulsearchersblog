@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   classifyPulseSection,
+  fillMissingPulseImages,
   fillPulseInHtml,
   isRoadish,
   parseRssItems,
@@ -10,6 +11,7 @@ import {
   pulseMarkdown,
   pulseTeaseHtml,
   runPulseCron,
+  sortPulseSectionItems,
   stripHtml,
 } from './thin-tires-pulse.js';
 
@@ -127,6 +129,41 @@ describe('pickPulseItems', () => {
   });
 });
 
+describe('missing pulse images', () => {
+  it('borrows a sibling photo and floats pictured stories first', () => {
+    const items = [
+      {
+        title: 'UCI commissaire who relegated Schreiber also responsible for Wiebes Giro DQ',
+        link: 'https://escapecollective.com/uci-commissaire/',
+        source: 'Escape Collective',
+        image: '',
+        pubDate: '2026-11-08T19:00:00.000Z',
+        section: 'cyclo-cross',
+        note: "Giro d&apos;Italia twist",
+      },
+      {
+        title: 'Commissaire who relegated Marie Schreiber at the European Cyclo-cross Championships',
+        link: 'https://www.cyclingnews.com/schreiber-commissaire/',
+        source: 'Cyclingnews',
+        image: 'https://cdn.example.com/schreiber.jpg',
+        pubDate: '2026-11-08T18:00:00.000Z',
+        section: 'cyclo-cross',
+      },
+    ];
+    const filled = fillMissingPulseImages(items);
+    assert.match(filled[0].image, /schreiber\.jpg/);
+    assert.match(stripHtml(filled[0].note), /Giro d'Italia twist/);
+    assert.match(stripHtml("Giro d&apos;Italia"), /Giro d'Italia/);
+    const blankLead = sortPulseSectionItems([
+      { ...items[0], image: '' },
+      items[1],
+    ]);
+    assert.match(blankLead[0].link, /cyclingnews/);
+    assert.match(pulseBoardHtml(filled), /schreiber\.jpg/);
+    assert.doesNotMatch(pulseBoardHtml(filled), /pulse-feature-media--blank/);
+  });
+});
+
 describe('pulse html', () => {
   it('renders section board and tease markers for Worker inject', () => {
     const items = [
@@ -190,6 +227,7 @@ describe('runPulseCron', () => {
     };
     const result = await runPulseCron(env, {
       fetchXml: async () => sampleRss,
+      now: Date.parse('2026-11-06T18:00:00Z'),
     });
     assert.ok(result.added >= 3);
     assert.ok(result.total >= 3);

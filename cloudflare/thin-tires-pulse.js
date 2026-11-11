@@ -48,29 +48,40 @@ export function escapeHtml(value) {
     .replace(/"/g, '&quot;');
 }
 
-export function stripHtml(value) {
+export function decodeEntities(value) {
   return String(value ?? '')
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1')
-    .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
     .replace(/&amp;/gi, '&')
     .replace(/&lt;/gi, '<')
     .replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
     .replace(/&#39;/gi, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#(\d+);/g, (_, n) => {
+      const code = Number(n);
+      return Number.isFinite(code) ? String.fromCharCode(code) : '';
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => {
+      const code = Number.parseInt(hex, 16);
+      return Number.isFinite(code) ? String.fromCharCode(code) : '';
+    });
+}
+
+export function stripHtml(value) {
+  return decodeEntities(
+    String(value ?? '')
+      .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1')
+      .replace(/<[^>]+>/g, ' '),
+  )
     .replace(/\s+/g, ' ')
     .trim();
 }
 
 export function decodeXml(value) {
-  return String(value ?? '')
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .trim();
+  return decodeEntities(
+    String(value ?? '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/gi, '$1'),
+  ).trim();
 }
 
 function tagText(block, tag) {
@@ -89,10 +100,103 @@ export function extractImage(block) {
   const media =
     attr(String(block).match(/<media:content\b[^>]*>/i)?.[0] || '', 'url') ||
     attr(String(block).match(/<media:thumbnail\b[^>]*>/i)?.[0] || '', 'url') ||
-    attr(String(block).match(/<enclosure\b[^>]*type=["']image/i)?.[0] || '', 'url');
-  if (media) return media;
+    attr(String(block).match(/<enclosure\b[^>]*type=["']image/i)?.[0] || '', 'url') ||
+    attr(String(block).match(/<enclosure\b[^>]*>/i)?.[0] || '', 'url');
+  if (media && isUsablePulseImage(media)) return media;
   const htmlImg = String(block).match(/<img[^>]+src=["']([^"']+)["']/i);
-  return htmlImg ? htmlImg[1].trim() : '';
+  const fromHtml = htmlImg ? htmlImg[1].trim() : '';
+  return isUsablePulseImage(fromHtml) ? fromHtml : '';
+}
+
+export function isUsablePulseImage(url) {
+  const img = String(url || '').trim();
+  if (!img || !/^https?:\/\//i.test(img)) return false;
+  if (/fallback|placeholder|favicon|sprite|1x1|pixel\./i.test(img)) return false;
+  return true;
+}
+
+export function hasPulseImage(item) {
+  return isUsablePulseImage(item?.image);
+}
+
+const TITLE_STOP = new Set([
+  'with',
+  'from',
+  'that',
+  'this',
+  'have',
+  'wins',
+  'title',
+  'race',
+  'after',
+  'also',
+  'who',
+  'for',
+  'the',
+  'and',
+  'into',
+  'over',
+  'into',
+  'onto',
+  'amid',
+  'as',
+  'at',
+  'on',
+  'in',
+  'to',
+  'of',
+  'a',
+  'an',
+]);
+
+function titleTokens(title) {
+  return String(title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((word) => word.length > 3 && !TITLE_STOP.has(word));
+}
+
+export function titleOverlap(a, b) {
+  const left = new Set(titleTokens(a));
+  const right = new Set(titleTokens(b));
+  if (!left.size || !right.size) return 0;
+  let hit = 0;
+  for (const token of left) {
+    if (right.has(token)) hit += 1;
+  }
+  return hit / Math.min(left.size, right.size);
+}
+
+/** Escape Collective dailynews often ships without media — borrow a sibling photo. */
+export function fillMissingPulseImages(items) {
+  const list = (Array.isArray(items) ? items : []).map((row) => ({ ...row }));
+  const withImg = list.filter((row) => hasPulseImage(row));
+  for (const row of list) {
+    if (hasPulseImage(row)) continue;
+    const section = row.section || 'road-men';
+    let best = null;
+    let bestScore = 0.34;
+    for (const peer of withImg) {
+      if ((peer.section || 'road-men') !== section) continue;
+      const score = titleOverlap(row.title, peer.title);
+      if (score > bestScore) {
+        bestScore = score;
+        best = peer;
+      }
+    }
+    if (best) row.image = best.image;
+  }
+  return list;
+}
+
+export function sortPulseSectionItems(items) {
+  return [...(items || [])].sort((a, b) => {
+    const ai = hasPulseImage(a) ? 1 : 0;
+    const bi = hasPulseImage(b) ? 1 : 0;
+    if (bi !== ai) return bi - ai;
+    return (Date.parse(b.pubDate) || 0) - (Date.parse(a.pubDate) || 0);
+  });
 }
 
 export function extractCategories(block) {
@@ -205,9 +309,10 @@ export function pickPulseItems(candidates, existing = [], now = Date.now()) {
     section: row.section || classifyPulseSection(row) || 'road-men',
   }));
 
+  const filled = fillMissingPulseImages(merged);
   const perSection = Object.fromEntries(PULSE_SECTIONS.map((s) => [s.id, []]));
   const urls = new Set();
-  for (const row of merged) {
+  for (const row of filled) {
     const key = String(row.link || row.id || '').toLowerCase();
     if (!key || urls.has(key) || row.draft) continue;
     const section = row.section || 'road-men';
@@ -217,15 +322,19 @@ export function pickPulseItems(candidates, existing = [], now = Date.now()) {
     perSection[section].push(row);
   }
 
-  const items = PULSE_SECTIONS.flatMap((s) => perSection[s.id]);
+  const items = PULSE_SECTIONS.flatMap((s) => sortPulseSectionItems(perSection[s.id]));
   return { added: fresh, items };
 }
 
 export function groupPulseBySection(items) {
-  const list = Array.isArray(items) ? items.filter((row) => !row.draft) : [];
+  const list = fillMissingPulseImages(
+    Array.isArray(items) ? items.filter((row) => !row.draft) : [],
+  );
   return PULSE_SECTIONS.map((section) => ({
     ...section,
-    items: list.filter((row) => (row.section || 'road-men') === section.id),
+    items: sortPulseSectionItems(
+      list.filter((row) => (row.section || 'road-men') === section.id),
+    ),
   }));
 }
 
@@ -266,7 +375,8 @@ function pulseRestItemsHtml(list, dateFmt) {
       const when = Number.isFinite(Date.parse(item.pubDate))
         ? dateFmt.format(new Date(item.pubDate))
         : '';
-      const media = item.image
+      const note = decodeEntities(item.note || '');
+      const media = hasPulseImage(item)
         ? `<a class="pulse-media" href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">` +
           `<img class="pulse-thumb" src="${escapeHtml(item.image)}" alt="" width="320" height="200" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></a>`
         : `<span class="pulse-media pulse-media--blank" aria-hidden="true"></span>`;
@@ -276,7 +386,7 @@ function pulseRestItemsHtml(list, dateFmt) {
         `<div class="pulse-copy">` +
         `<p class="pulse-meta">${escapeHtml([item.source, when].filter(Boolean).join(' · '))}</p>` +
         `<h3 class="pulse-title"><a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></h3>` +
-        (item.note ? `<p class="pulse-note">${escapeHtml(item.note)}</p>` : '') +
+        (note ? `<p class="pulse-note">${escapeHtml(note)}</p>` : '') +
         `</div></li>`
       );
     })
@@ -307,7 +417,8 @@ export function pulseBoardHtml(items) {
         const when = Number.isFinite(Date.parse(lead.pubDate))
           ? dateFmt.format(new Date(lead.pubDate))
           : '';
-        const media = lead.image
+        const note = decodeEntities(lead.note || '');
+        const media = hasPulseImage(lead)
           ? `<a class="pulse-feature-media" href="${escapeHtml(lead.link)}" target="_blank" rel="noopener noreferrer">` +
             `<img class="pulse-feature-img" src="${escapeHtml(lead.image)}" alt="" width="1200" height="675" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></a>`
           : `<div class="pulse-feature-media pulse-feature-media--blank" aria-hidden="true"></div>`;
@@ -317,7 +428,7 @@ export function pulseBoardHtml(items) {
           `<div class="pulse-feature-copy">` +
           `<p class="pulse-meta">${escapeHtml([lead.source, when].filter(Boolean).join(' · '))}</p>` +
           `<h3 class="pulse-feature-title"><a href="${escapeHtml(lead.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(lead.title)}</a></h3>` +
-          (lead.note ? `<p class="pulse-note">${escapeHtml(lead.note)}</p>` : '') +
+          (note ? `<p class="pulse-note">${escapeHtml(note)}</p>` : '') +
           `</div></article>`;
       }
       const restList = rest.length
@@ -537,7 +648,7 @@ export async function runPulseCron(env, deps = {}) {
   const fetchXml = deps.fetchXml || fetchFeedXml;
   const existing = await readPulse(env);
   const candidates = await gatherCandidates(fetchXml);
-  const { added, items } = pickPulseItems(candidates, existing);
+  const { added, items } = pickPulseItems(candidates, existing, deps.now ?? Date.now());
   await writePulse(env, items, { added: added.length });
   let commits = [];
   if (added.length) {
