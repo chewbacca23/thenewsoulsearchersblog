@@ -38,7 +38,11 @@ const instagram = instagramBind(settings);
       <a href="/rss.xml">RSS</a>
     </div>
     <p class="footer-copy">© {year} {site.name}. A cycling blog, packed light.</p>
-    <p class="footer-credit">Site built by artoo871 and Cursor :)</p>
+    <p class="footer-credit">
+      Site built by
+      <a class="footer-credit-mail" href="mailto:henrik@thenewsoulsearchers.de">artoo871</a>
+      and Cursor :)
+    </p>
   </div>
 </footer>
 
@@ -76,6 +80,18 @@ const instagram = instagramBind(settings);
     margin: 0.15rem 0 0;
     color: rgba(215, 224, 232, 0.42);
     font-size: 0.78rem;
+  }
+
+  .footer-credit-mail {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgba(215, 224, 232, 0.28);
+    text-underline-offset: 0.18em;
+  }
+
+  .footer-credit-mail:hover {
+    color: var(--amber-hot);
+    text-decoration-color: rgba(240, 194, 122, 0.55);
   }
 
   .footer-links {
