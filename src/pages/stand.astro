@@ -1,0 +1,312 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Where did you stand?"
+  description="A soft weekly ritual on The Soul Searchers — first name, a place, optional one-line tip."
+>
+  <section class="section stand-page">
+    <div class="site-shell stand">
+      <p class="eyebrow reveal">Weekly ritual</p>
+      <h1 class="section-title reveal reveal-delay-1">Where did you stand?</h1>
+      <p class="section-lead reveal reveal-delay-2">
+        First name and a place — café, climb, city corner, quiet road.<br />
+        One short tip if you want. Soft, public, refreshed every week.
+      </p>
+
+      <div class="stand-board reveal reveal-delay-3" data-week-stand>
+        <div class="stand-panel">
+          <p class="stand-week" data-stand-week>This week</p>
+          <p class="stand-status" data-stand-status hidden></p>
+          <form class="stand-form" data-stand-form>
+            <label>
+              <span>First name</span>
+              <input type="text" name="name" required maxlength="40" autocomplete="nickname" />
+            </label>
+            <label>
+              <span>Where you stood</span>
+              <input
+                type="text"
+                name="place"
+                required
+                maxlength="80"
+                autocomplete="off"
+                placeholder="Café, climb, street…"
+              />
+            </label>
+            <label>
+              <span>
+                One-line tip <em>(optional)</em>
+              </span>
+              <input type="text" name="tip" maxlength="140" autocomplete="off" placeholder="Flat white after the rain" />
+            </label>
+            <label class="stand-hp" aria-hidden="true">
+              <span>Website</span>
+              <input type="text" name="website" tabindex="-1" autocomplete="off" />
+            </label>
+            <button class="btn btn-primary" type="submit">Pin this week</button>
+          </form>
+        </div>
+
+        <div class="stand-wall">
+          <h2 class="stand-wall-title">This week’s wall</h2>
+          <p class="stand-empty" data-stand-empty>Be the first pin this week — a name and a place.</p>
+          <ol class="stand-list" data-stand-list hidden></ol>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  .stand-page .stand {
+    max-width: 52rem;
+  }
+
+  .stand-board {
+    display: grid;
+    gap: 1.75rem;
+  }
+
+  @media (min-width: 820px) {
+    .stand-board {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: 2rem;
+      align-items: start;
+    }
+  }
+
+  .stand-panel,
+  .stand-wall {
+    padding: 1.25rem 1.2rem 1.35rem;
+    border: 1px solid rgba(215, 224, 232, 0.12);
+    border-radius: 1.05rem;
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, rgba(212, 163, 90, 0.12), transparent 55%),
+      rgba(8, 12, 17, 0.42);
+  }
+
+  .stand-week {
+    margin: 0 0 1rem;
+    color: var(--amber-hot);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .stand-form {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .stand-form label {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .stand-form span {
+    color: rgba(215, 224, 232, 0.72);
+    font-size: 0.86rem;
+  }
+
+  .stand-form em {
+    font-style: normal;
+    opacity: 0.7;
+  }
+
+  .stand-form input {
+    width: 100%;
+    margin: 0;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid rgba(215, 224, 232, 0.14);
+    border-radius: 0.7rem;
+    background: rgba(8, 12, 17, 0.55);
+    color: var(--paper);
+    font: inherit;
+  }
+
+  .stand-form input:focus {
+    outline: none;
+    border-color: rgba(212, 163, 90, 0.45);
+  }
+
+  .stand-hp {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .stand-status {
+    margin: 0 0 0.85rem;
+    color: rgba(215, 224, 232, 0.78);
+    font-size: 0.92rem;
+  }
+
+  .stand-status[data-tone='ok'] {
+    color: #9ec9b0;
+  }
+
+  .stand-status[data-tone='err'] {
+    color: #e8a0a0;
+  }
+
+  .stand-wall-title {
+    margin: 0 0 0.85rem;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .stand-empty {
+    margin: 0;
+    color: rgba(215, 224, 232, 0.58);
+  }
+
+  .stand-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .stand-item {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.7rem 0.15rem;
+    border-bottom: 1px solid rgba(215, 224, 232, 0.08);
+  }
+
+  .stand-item:last-child {
+    border-bottom: 0;
+  }
+
+  .stand-item-meta {
+    color: var(--amber-hot);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .stand-item-place {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .stand-item-tip {
+    margin: 0.15rem 0 0;
+    color: rgba(215, 224, 232, 0.72);
+    font-size: 0.95rem;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('[data-week-stand]');
+    if (!root) return;
+    var form = root.querySelector('[data-stand-form]');
+    var list = root.querySelector('[data-stand-list]');
+    var empty = root.querySelector('[data-stand-empty]');
+    var status = root.querySelector('[data-stand-status]');
+    var weekEl = root.querySelector('[data-stand-week]');
+
+    function showStatus(text, tone) {
+      if (!status) return;
+      status.hidden = !text;
+      status.textContent = text || '';
+      status.setAttribute('data-tone', tone || '');
+    }
+
+    function render(stands, weekLabel) {
+      if (weekEl && weekLabel) weekEl.textContent = weekLabel;
+      if (!list || !empty) return;
+      list.innerHTML = '';
+      if (!stands || !stands.length) {
+        list.hidden = true;
+        empty.hidden = false;
+        return;
+      }
+      empty.hidden = true;
+      list.hidden = false;
+      stands.forEach(function (row) {
+        var li = document.createElement('li');
+        li.className = 'stand-item';
+        var meta = document.createElement('p');
+        meta.className = 'stand-item-meta';
+        meta.textContent = (row.name || 'Rider') + ' · ' + (row.weekLabel || 'This week');
+        var place = document.createElement('p');
+        place.className = 'stand-item-place';
+        place.textContent = row.place || '';
+        li.appendChild(meta);
+        li.appendChild(place);
+        if (row.tip) {
+          var tip = document.createElement('p');
+          tip.className = 'stand-item-tip';
+          tip.textContent = row.tip;
+          li.appendChild(tip);
+        }
+        list.appendChild(li);
+      });
+    }
+
+    function load() {
+      fetch('/api/week-stand', { credentials: 'same-origin' })
+        .then(function (res) {
+          return res.json();
+        })
+        .then(function (data) {
+          if (!data || !data.ok) return;
+          render(data.stands || [], data.weekLabel || 'This week');
+        })
+        .catch(function () {});
+    }
+
+    if (form) {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        showStatus('Pinning…', '');
+        var fd = new FormData(form);
+        var payload = {
+          name: String(fd.get('name') || '').trim(),
+          place: String(fd.get('place') || '').trim(),
+          tip: String(fd.get('tip') || '').trim(),
+          website: String(fd.get('website') || '').trim(),
+        };
+        fetch('/api/week-stand', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+          .then(function (res) {
+            return res.json().then(function (data) {
+              return { res: res, data: data };
+            });
+          })
+          .then(function (out) {
+            if (!out.data || !out.data.ok) {
+              showStatus((out.data && out.data.error) || 'Could not pin that.', 'err');
+              return;
+            }
+            form.reset();
+            showStatus('Pinned. See you next week.', 'ok');
+            load();
+          })
+          .catch(function () {
+            showStatus('Could not pin that just now.', 'err');
+          });
+      });
+    }
+
+    load();
+  })();
+</script>

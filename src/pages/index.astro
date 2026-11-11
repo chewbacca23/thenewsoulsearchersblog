@@ -254,9 +254,52 @@ const hasRideLinks = heroSlides.some((slide) => slide.ride);
       </ol>
     </div>
   </section>
+
+  <section class="section stand-tease-section" aria-label="Where did you stand">
+    <div class="site-shell stand-tease">
+      <p class="eyebrow">Weekly ritual</p>
+      <h2 class="stand-tease-title">Where did you stand?</h2>
+      <p class="stand-tease-lead">
+        First name and a place — café, climb, corner of the city. Soft, public, every week.
+      </p>
+      <a class="btn btn-primary" href="/stand">Pin this week</a>
+    </div>
+  </section>
 </BaseLayout>
 
 <style is:global>
+  .stand-tease-section {
+    padding-top: 2.5rem;
+    padding-bottom: 3.5rem;
+    border-top: 1px solid rgba(215, 224, 232, 0.08);
+    background:
+      radial-gradient(ellipse 60% 70% at 90% 10%, rgba(212, 163, 90, 0.1), transparent 55%),
+      rgba(8, 12, 17, 0.25);
+  }
+
+  .stand-tease {
+    max-width: 36rem;
+  }
+
+  .stand-tease .eyebrow {
+    margin: 0 0 0.45rem;
+  }
+
+  .stand-tease-title {
+    margin: 0 0 0.55rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.35rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  .stand-tease-lead {
+    margin: 0 0 1.25rem;
+    color: rgba(215, 224, 232, 0.72);
+    max-width: 28rem;
+  }
+
   .pulse-tease-section {
     padding-top: 2.75rem;
     padding-bottom: 3.75rem;

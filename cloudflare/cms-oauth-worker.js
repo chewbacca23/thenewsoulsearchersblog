@@ -40,6 +40,7 @@ import { handleRemarksRequest } from './kind-remarks.js';
 import { handleMembersRequest } from './member-mail.js';
 import { handlePostcardSharesRequest } from './postcard-shares.js';
 import { handleStoodPlacesRequest } from './stood-places.js';
+import { handleWeekStandRequest } from './week-stand.js';
 import {
   applyPulseToAsset,
   handlePulseRequest,
@@ -511,6 +512,9 @@ export default {
 
       const stoodPlaces = await handleStoodPlacesRequest(request, env);
       if (stoodPlaces) return stoodPlaces;
+
+      const weekStand = await handleWeekStandRequest(request, env);
+      if (weekStand) return weekStand;
 
       const hooks = await handleHooksRequest(request, env);
       if (hooks) return hooks;
