@@ -28,6 +28,7 @@ import {
   recentDayBars,
   recentMonthBars,
   recentWeekBars,
+  isLikelyBot,
   shouldCountDocument,
   shouldRecordPath,
   summarizeLooks,
@@ -523,11 +524,45 @@ describe('GET/POST /api/looks', () => {
 describe('shouldCountDocument', () => {
   it('counts a page open and skips a photo', () => {
     assert.equal(
-      shouldCountDocument(new Request('https://thenewsoulsearchers.de/now')),
+      shouldCountDocument(
+        new Request('https://thenewsoulsearchers.de/now', {
+          headers: {
+            'user-agent':
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
+          },
+        }),
+      ),
       true,
     );
     assert.equal(
       shouldCountDocument(new Request('https://thenewsoulsearchers.de/stories/img_5940.jpg')),
+      false,
+    );
+  });
+
+  it('skips crawlers and empty user-agents', () => {
+    assert.equal(isLikelyBot('Mozilla/5.0 (compatible; Googlebot/2.1)'), true);
+    assert.equal(isLikelyBot('GPTBot/1.0'), true);
+    assert.equal(isLikelyBot('curl/8.0'), true);
+    assert.equal(isLikelyBot(''), true);
+    assert.equal(
+      isLikelyBot('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'),
+      false,
+    );
+    assert.equal(
+      shouldCountDocument(
+        new Request('https://thenewsoulsearchers.de/', {
+          headers: { 'user-agent': 'Mozilla/5.0 (compatible; bingbot/2.0)' },
+        }),
+      ),
+      false,
+    );
+    assert.equal(
+      shouldCountDocument(
+        new Request('https://thenewsoulsearchers.de/', {
+          headers: { 'cf-verified-bot': 'true', 'user-agent': 'NiceBot' },
+        }),
+      ),
       false,
     );
   });

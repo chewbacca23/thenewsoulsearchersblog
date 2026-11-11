@@ -722,12 +722,46 @@ export function shouldFillLooks(pathname) {
   return isLooksPath(pathname) || isMembersPath(pathname) || isAdminPath(pathname);
 }
 
+/**
+ * Soft filter so Looks leans toward people, not crawlers.
+ * Misses clever scrapers; catches the usual search / social / AI bots.
+ * @param {string} userAgent
+ */
+export function isLikelyBot(userAgent) {
+  const ua = String(userAgent || '').trim();
+  if (!ua) return true;
+  return (
+    /\b(bot|spider|crawler|crawl|slurp|fetch|monitor|preview|scanner|scrapy|headless)\b/i.test(
+      ua,
+    ) ||
+    /\b(googlebot|bingbot|yandex|baidu|duckduck|applebot|semrush|ahrefs|mj12|dotbot|rogerbot|petalbot|bytespider)\b/i.test(
+      ua,
+    ) ||
+    /\b(gptbot|claudebot|anthropic|chatgpt|openai|perplexity|ccbot|amazonbot|meta-externalagent)\b/i.test(
+      ua,
+    ) ||
+    /\b(facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|whatsapp|telegrambot|pinterest)\b/i.test(
+      ua,
+    ) ||
+    /\b(curl|wget|python-requests|python-urllib|go-http-client|libwww|httpclient|java\/|okhttp|axios\/|node-fetch|postman)\b/i.test(
+      ua,
+    ) ||
+    /\b(pingdom|uptimerobot|statuscake|site24x7|newrelic|datadog|phantomjs|puppeteer|selenium|playwright)\b/i.test(
+      ua,
+    )
+  );
+}
+
 export function shouldCountDocument(request) {
   if (request.method !== 'GET' && request.method !== 'HEAD') return false;
   const dest = (request.headers.get('sec-fetch-dest') || '').toLowerCase();
   if (dest && dest !== 'document' && dest !== 'empty') return false;
   const path = new URL(request.url).pathname;
   if (/\.[a-z0-9]{1,8}$/i.test(path)) return false;
+  // Cloudflare verified bots (when the header is present).
+  const verified = (request.headers.get('cf-verified-bot') || '').toLowerCase();
+  if (verified === 'true' || verified === '1') return false;
+  if (isLikelyBot(request.headers.get('user-agent') || '')) return false;
   return true;
 }
 
