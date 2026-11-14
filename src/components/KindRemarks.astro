@@ -1,4 +1,6 @@
 ---
+import { AWESOME_LABEL, POSITIVE_LEAD } from '../../cloudflare/kind-remarks.js';
+
 interface Props {
   path?: string;
 }
@@ -20,10 +22,13 @@ const skip =
       <div class="site-shell kind-inner">
         <div class="kind-panel" data-kind-panel>
           <h2 class="kind-title">Kind words</h2>
-          <p class="kind-lead">
-            This is a positive site.<br />
-            Leave a short, kind remark for this page.
-          </p>
+          <p class="kind-lead">{POSITIVE_LEAD}</p>
+          <div class="kind-awesome-row">
+            <button class="btn btn-primary kind-awesome-btn" type="button" data-kind-awesome>
+              {AWESOME_LABEL}
+            </button>
+            <span class="kind-awesome-count" data-kind-awesome-count hidden></span>
+          </div>
           <ul class="kind-list" data-kind-list hidden></ul>
           <p class="kind-empty" data-kind-empty>
             Kind words show here when someone leaves the first one.
@@ -90,6 +95,9 @@ const skip =
         var empty = root.querySelector('[data-kind-empty]');
         var status = root.querySelector('[data-kind-status]');
         var form = root.querySelector('[data-kind-form]');
+        var awesomeBtn = root.querySelector('[data-kind-awesome]');
+        var awesomeCount = root.querySelector('[data-kind-awesome-count]');
+        var awesomeStoreKey = 'ss-awesome:' + path;
 
         function showStatus(text, tone) {
           if (!status) return;
@@ -124,6 +132,40 @@ const skip =
           });
         }
 
+        function paintAwesome(n) {
+          var count = Number(n) || 0;
+          if (!awesomeCount) return;
+          if (count < 1) {
+            awesomeCount.hidden = true;
+            awesomeCount.textContent = '';
+            awesomeCount.removeAttribute('aria-label');
+            return;
+          }
+          awesomeCount.hidden = false;
+          awesomeCount.textContent = '· ' + count;
+          awesomeCount.setAttribute('aria-label', count === 1 ? '1 person' : count + ' people');
+        }
+
+        function alreadyAwesome() {
+          try {
+            return localStorage.getItem(awesomeStoreKey) === '1';
+          } catch (e) {
+            return false;
+          }
+        }
+
+        function rememberAwesome() {
+          try {
+            localStorage.setItem(awesomeStoreKey, '1');
+          } catch (e) {}
+          if (awesomeBtn) {
+            awesomeBtn.disabled = true;
+            awesomeBtn.setAttribute('aria-pressed', 'true');
+          }
+        }
+
+        if (alreadyAwesome()) rememberAwesome();
+
         fetch('/api/remarks?path=' + encodeURIComponent(path), {
           headers: { accept: 'application/json' },
         })
@@ -132,8 +174,52 @@ const skip =
           })
           .then(function (data) {
             paint(data && data.remarks ? data.remarks : []);
+            paintAwesome(data && data.awesome);
           })
           .catch(function () {});
+
+        if (awesomeBtn) {
+          awesomeBtn.addEventListener('click', function () {
+            if (awesomeBtn.getAttribute('aria-pressed') === 'true') return;
+            showStatus('', '');
+            awesomeBtn.disabled = true;
+            var hp = form ? form.querySelector('input[name="website"]') : null;
+            fetch('/api/remarks', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json', accept: 'application/json' },
+              body: JSON.stringify({
+                path: path,
+                kind: 'awesome',
+                website: hp ? String(hp.value || '') : '',
+              }),
+            })
+              .then(function (res) {
+                return res.json().then(function (data) {
+                  return { ok: res.ok, data: data };
+                });
+              })
+              .then(function (result) {
+                if (!result.ok || !result.data || !result.data.ok) {
+                  if (!alreadyAwesome()) awesomeBtn.disabled = false;
+                  showStatus(
+                    (result.data && result.data.error) || 'Could not save that just now.',
+                    'bad',
+                  );
+                  return;
+                }
+                if (result.data.via === 'discard') {
+                  awesomeBtn.disabled = false;
+                  return;
+                }
+                rememberAwesome();
+                paintAwesome(result.data.awesome);
+              })
+              .catch(function () {
+                if (!alreadyAwesome()) awesomeBtn.disabled = false;
+                showStatus('Could not save that just now.', 'bad');
+              });
+          });
+        }
 
         if (form) {
           form.addEventListener('submit', function (event) {
@@ -294,6 +380,28 @@ const skip =
     color: rgba(215, 224, 232, 0.58);
     font-size: 0.8rem;
     line-height: 1.4;
+  }
+
+  .kind-awesome-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+  }
+
+  .kind-awesome-btn {
+    justify-self: start;
+  }
+
+  .kind-awesome-btn:disabled {
+    opacity: 0.65;
+    cursor: default;
+    transform: none;
+  }
+
+  .kind-awesome-count {
+    color: rgba(215, 224, 232, 0.72);
+    font-size: 0.78rem;
   }
 
   .kind-list {

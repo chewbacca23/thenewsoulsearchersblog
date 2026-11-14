@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  AWESOME_LABEL,
+  POSITIVE_LEAD,
   handleRemarksRequest,
   injectKindRemarks,
   isKindMessage,
+  isPositiveMessage,
   normalizeRemarkPath,
   parseRemarkBody,
   validateRemark,
@@ -49,6 +52,32 @@ describe('isKindMessage', () => {
     assert.equal(isKindMessage('Click www.bad.example now please'), false);
     assert.equal(isKindMessage('<script>alert(1)</script> hello'), false);
   });
+
+  it('stays softer than the remark filter', () => {
+    assert.equal(isKindMessage('Window seat after a wet ride'), true);
+    assert.equal(isPositiveMessage('Window seat after a wet ride'), false);
+  });
+});
+
+describe('isPositiveMessage', () => {
+  it('needs a warm English or German cue', () => {
+    assert.equal(isPositiveMessage('Beautiful climb — thank you for sharing.'), true);
+    assert.equal(isPositiveMessage('Schöner Tag auf dem Rad.'), true);
+    assert.equal(isPositiveMessage('Danke, das war wunderschön.'), true);
+    assert.equal(isPositiveMessage('Loved the coast road.'), true);
+    assert.equal(isPositiveMessage('I rode along the coast today.'), false);
+  });
+
+  it('rejects lectures even when a warm word is mixed in', () => {
+    assert.equal(isPositiveMessage('You should love this sport more.'), false);
+    assert.equal(isPositiveMessage('Let me explain why the sunset was beautiful.'), false);
+    assert.equal(isPositiveMessage('Du solltest dankbar sein.'), false);
+  });
+
+  it('rejects a negated warm word', () => {
+    assert.equal(isPositiveMessage('This is not great at all.'), false);
+    assert.equal(isPositiveMessage('Das war nicht schön.'), false);
+  });
 });
 
 describe('parseRemarkBody and validateRemark', () => {
@@ -78,6 +107,19 @@ describe('parseRemarkBody and validateRemark', () => {
     const fields = parseRemarkBody({ path: '/', message: 'Hi' });
     assert.match(validateRemark(fields), /at least/i);
   });
+
+  it('refuses a lecture and a flat note', () => {
+    const lecture = parseRemarkBody({
+      path: '/',
+      message: 'Let me explain why you should train harder.',
+    });
+    assert.match(validateRemark(lecture), /positive thoughts/i);
+    const flat = parseRemarkBody({
+      path: '/',
+      message: 'I rode along the coast today.',
+    });
+    assert.match(validateRemark(flat), /positive thoughts/i);
+  });
 });
 
 describe('injectKindRemarks', () => {
@@ -87,6 +129,9 @@ describe('injectKindRemarks', () => {
     assert.match(once, /<\/main>\s*<style>/);
     const twice = injectKindRemarks(once);
     assert.equal(twice, once);
+    assert.match(once, new RegExp(POSITIVE_LEAD.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(once, /data-kind-awesome/);
+    assert.match(once, new RegExp(AWESOME_LABEL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   });
 });
 
@@ -113,6 +158,7 @@ describe('handleRemarksRequest', () => {
     const data = await res.json();
     assert.equal(data.ok, true);
     assert.deepEqual(data.remarks, []);
+    assert.equal(data.awesome, 0);
   });
 
   it('saves a kind word and lists it back', async () => {
@@ -177,6 +223,89 @@ describe('handleRemarksRequest', () => {
     assert.equal(res.status, 400);
     const data = await res.json();
     assert.match(data.error, /kind words/i);
+    assert.match(data.error, /positive thoughts/i);
     assert.equal(Object.keys(kv._store).filter((k) => k.startsWith('remarks:path:')).length, 0);
+    assert.equal(JSON.stringify(kv._store).includes('stupid'), false);
+  });
+
+  it('publishes an awesome tap straight into the public count', async () => {
+    const kv = memoryKv();
+    const post = await handleRemarksRequest(
+      new Request('https://thenewsoulsearchers.de/api/remarks', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ path: '/about', kind: 'awesome' }),
+      }),
+      { STATS: kv },
+    );
+    assert.equal(post.status, 200);
+    const saved = await post.json();
+    assert.equal(saved.ok, true);
+    assert.equal(saved.awesome, 1);
+    assert.equal(kv._store['remarks:awesome:/about'], '1');
+
+    const again = await handleRemarksRequest(
+      new Request('https://thenewsoulsearchers.de/api/remarks', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ path: '/about', kind: 'awesome' }),
+      }),
+      { STATS: kv },
+    );
+    assert.equal((await again.json()).awesome, 2);
+
+    const get = await handleRemarksRequest(
+      new Request('https://thenewsoulsearchers.de/api/remarks?path=/about'),
+      { STATS: kv },
+    );
+    const listed = await get.json();
+    assert.equal(listed.awesome, 2);
+    assert.deepEqual(listed.remarks, []);
+    assert.equal(listed.queue, undefined);
+  });
+
+  it('discards a honeypot awesome tap without counting', async () => {
+    const kv = memoryKv();
+    const res = await handleRemarksRequest(
+      new Request('https://thenewsoulsearchers.de/api/remarks', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          path: '/about',
+          kind: 'awesome',
+          website: 'http://bot.test',
+        }),
+      }),
+      { STATS: kv },
+    );
+    const data = await res.json();
+    assert.equal(data.ok, true);
+    assert.equal(data.via, 'discard');
+    assert.equal(kv._store['remarks:awesome:/about'], undefined);
+  });
+
+  it('refuses a lecture and never stores the text', async () => {
+    const kv = memoryKv();
+    const message = 'Let me explain why you should train harder on this climb.';
+    const res = await handleRemarksRequest(
+      new Request('https://thenewsoulsearchers.de/api/remarks', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ path: '/stories/demo', message }),
+      }),
+      { STATS: kv },
+    );
+    assert.equal(res.status, 400);
+    const data = await res.json();
+    assert.match(data.error, /positive thoughts/i);
+    const blob = JSON.stringify(kv._store);
+    assert.equal(blob.includes('explain'), false);
+    assert.equal(blob.includes(message), false);
+    assert.equal(
+      Object.keys(kv._store).some(
+        (key) => key.startsWith('remarks:path:') || key.startsWith('remarks:awesome:'),
+      ),
+      false,
+    );
   });
 });
