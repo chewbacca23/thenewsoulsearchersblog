@@ -1,9 +1,12 @@
 /**
  * Kind words on every public page.
- * GET  /api/remarks?path=/stories/...
+ * GET  /api/remarks?path=/stories/...  → { ok, path, remarks, awesome }
  * POST /api/remarks  { path, name?, message, website? }
+ * POST /api/remarks  { path, kind: "awesome", website? }
  *
- * Stored in STATS KV. Automatic positive check before save — no approve queue.
+ * Stored in STATS KV. A warm note publishes immediately.
+ * Hate and lectures are refused and never written. No approve queue.
+ * “That’s awesome” is a public count only — Henrik sees the same list.
  */
 
 export const MAX_NAME = 40;
@@ -14,7 +17,12 @@ export const STORE_LIMIT = 40;
 export const RATE_WINDOW_SEC = 60 * 60;
 export const RATE_MAX = 5;
 
-const KIND_REFUSAL = 'This site only keeps kind words.';
+export const AWESOME_LABEL = 'That’s awesome';
+export const POSITIVE_LEAD =
+  'Only positive thoughts get approved. Tap “That’s awesome” or leave a short, kind note. Haters and lectures never go live.';
+
+const KIND_REFUSAL =
+  'This site only keeps kind words. Only positive thoughts get approved.';
 
 /** Lowercase EN/DE hostile / rude tokens. Whole-word style via regex boundaries. */
 const BLOCKED = [
@@ -100,6 +108,216 @@ const BLOCKED_RE = new RegExp(
   'iu',
 );
 
+/** Lecture voice. These never publish, even if a warm word is mixed in. */
+const LECTURE = [
+  'you should',
+  "you shouldn't",
+  'you should not',
+  'you must',
+  'you need to',
+  'you ought',
+  'let me explain',
+  'let me tell',
+  "here's why",
+  'here is why',
+  'the problem is',
+  "you're wrong",
+  'you are wrong',
+  'people like you',
+  'wake up',
+  'educate yourself',
+  'do better',
+  'one should',
+  'man sollte',
+  'du solltest',
+  'du musst',
+  'ihr solltet',
+  'ihr müsst',
+  'ihr muesst',
+  'lass mich erklären',
+  'lass mich erklaeren',
+  'ich erkläre',
+  'ich erklaere',
+  'das problem ist',
+  'du liegst falsch',
+];
+
+const LECTURE_RE = new RegExp(LECTURE.map(escapeRegExp).join('|'), 'iu');
+
+/** Warm EN/DE cue required before a short comment can auto-publish. */
+const WARM = [
+  'love',
+  'loved',
+  'lovely',
+  'loving',
+  'loves',
+  'great',
+  'greater',
+  'greatest',
+  'beautiful',
+  'beauty',
+  'thank',
+  'thanks',
+  'thankful',
+  'awesome',
+  'wonderful',
+  'wonderfully',
+  'amazing',
+  'amazed',
+  'kindness',
+  'kindly',
+  'nice',
+  'nicer',
+  'nicest',
+  'good',
+  'happy',
+  'happiness',
+  'joy',
+  'joyful',
+  'glad',
+  'enjoy',
+  'enjoyed',
+  'enjoying',
+  'brilliant',
+  'excellent',
+  'sweet',
+  'warm',
+  'warmth',
+  'heart',
+  'hearts',
+  'cheers',
+  'wow',
+  'stunning',
+  'gorgeous',
+  'inspiring',
+  'inspired',
+  'inspiration',
+  'grateful',
+  'gratitude',
+  'appreciate',
+  'appreciated',
+  'appreciation',
+  'perfect',
+  'fantastic',
+  'delightful',
+  'delight',
+  'charming',
+  'peaceful',
+  'peace',
+  'calm',
+  'gentle',
+  'smile',
+  'smiling',
+  'smiled',
+  'hug',
+  'hugs',
+  'bless',
+  'blessed',
+  'blessing',
+  'hope',
+  'hopeful',
+  'proud',
+  'brave',
+  'friend',
+  'friends',
+  'friendship',
+  'welcome',
+  'magic',
+  'magical',
+  'danke',
+  'dankeschön',
+  'dankeschoen',
+  'dankbar',
+  'dankbarkeit',
+  'schön',
+  'schöner',
+  'schöne',
+  'schönes',
+  'schönen',
+  'schönsten',
+  'schönheit',
+  'schoen',
+  'schoener',
+  'schoene',
+  'schoenes',
+  'schoenen',
+  'schoenheit',
+  'liebe',
+  'lieben',
+  'liebt',
+  'lieb',
+  'lieber',
+  'liebste',
+  'geliebt',
+  'toll',
+  'toller',
+  'tolle',
+  'tolles',
+  'super',
+  'wunderbar',
+  'wunderschön',
+  'wunderschoen',
+  'wunder',
+  'großartig',
+  'grossartig',
+  'herrlich',
+  'fantastisch',
+  'klasse',
+  'prima',
+  'herzlich',
+  'herz',
+  'herzen',
+  'freude',
+  'froh',
+  'fröhlich',
+  'froehlich',
+  'glücklich',
+  'gluecklich',
+  'glück',
+  'glueck',
+  'genial',
+  'spitze',
+  'angenehm',
+  'freundlich',
+  'begeistert',
+  'begeisterung',
+  'inspirierend',
+  'traumhaft',
+  'himmlisch',
+  'bravo',
+  'gemütlich',
+  'gemuetlich',
+  'friedlich',
+  'frieden',
+  'sanft',
+  'lächeln',
+  'laecheln',
+  'umarmung',
+  'hoffnung',
+  'stolz',
+  'mut',
+  'freund',
+  'freunde',
+  'freundin',
+  'freundschaft',
+  'willkommen',
+  'magisch',
+  'zauberhaft',
+  'lecker',
+  'köstlich',
+  'koestlich',
+  'grandios',
+  'goldig',
+];
+
+const WARM_RE = new RegExp(
+  `(?:^|[^\\p{L}\\p{N}_])(?:${WARM.map(escapeRegExp).join('|')})(?=$|[^\\p{L}\\p{N}_])`,
+  'iu',
+);
+
+const NEGATIVE_RE =
+  /(?:^|[^\p{L}\p{N}_])(?:not|never|nicht|nie|niemals|schlecht|boring|langweilig|hässlich|haesslich|don['’]?t|do not)(?=$|[^\p{L}\p{N}_])/iu;
+
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -142,6 +360,20 @@ export function isKindMessage(message) {
 }
 
 /**
+ * Stricter than {@link isKindMessage}: a remark must read warm (EN or DE).
+ * Week-stand still uses the softer check. Lectures and hate never pass.
+ * @param {string} message
+ */
+export function isPositiveMessage(message) {
+  if (!isKindMessage(message)) return false;
+  const text = String(message || '');
+  if (LECTURE_RE.test(text)) return false;
+  if (NEGATIVE_RE.test(text)) return false;
+  if (!WARM_RE.test(text)) return false;
+  return true;
+}
+
+/**
  * @param {unknown} body
  */
 export function parseRemarkBody(body) {
@@ -156,7 +388,8 @@ export function parseRemarkBody(body) {
     .slice(0, MAX_MESSAGE);
   const website = String(data.website || data.company || '').trim();
   const path = normalizeRemarkPath(data.path);
-  return { name, message, website, path };
+  const kind = String(data.kind || '').trim().toLowerCase() === 'awesome' ? 'awesome' : '';
+  return { name, message, website, path, kind };
 }
 
 /**
@@ -170,8 +403,10 @@ export function validateRemark(fields) {
   if (fields.message.length > MAX_MESSAGE) {
     return `Keep it under ${MAX_MESSAGE} characters.`;
   }
-  if (!isKindMessage(fields.message)) return KIND_REFUSAL;
-  if (fields.name && BLOCKED_RE.test(fields.name)) return KIND_REFUSAL;
+  if (!isPositiveMessage(fields.message)) return KIND_REFUSAL;
+  if (fields.name && (BLOCKED_RE.test(fields.name) || LECTURE_RE.test(fields.name))) {
+    return KIND_REFUSAL;
+  }
   return '';
 }
 
@@ -205,6 +440,10 @@ function clientKey(request) {
 
 function listKey(path) {
   return `remarks:path:${path}`;
+}
+
+function awesomeKey(path) {
+  return `remarks:awesome:${path}`;
 }
 
 /**
@@ -288,6 +527,40 @@ export async function saveRemark(env, path, fields) {
 }
 
 /**
+ * Public “That’s awesome” count. No names, no queue.
+ * @param {any} env
+ * @param {string} path
+ */
+export async function readAwesome(env, path) {
+  const kv = env?.STATS;
+  if (!kv || typeof kv.get !== 'function') return 0;
+  try {
+    const raw = await kv.get(awesomeKey(path));
+    const count = Number.parseInt(String(raw ?? ''), 10);
+    return Number.isFinite(count) && count > 0 ? count : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * @param {any} env
+ * @param {string} path
+ */
+export async function addAwesome(env, path) {
+  const kv = env?.STATS;
+  if (!kv || typeof kv.get !== 'function' || typeof kv.put !== 'function') {
+    const err = new Error('Remarks storage is not wired.');
+    // @ts-expect-error code
+    err.code = 'E_REMARKS_KV';
+    throw err;
+  }
+  const next = (await readAwesome(env, path)) + 1;
+  await kv.put(awesomeKey(path), String(next));
+  return next;
+}
+
+/**
  * Markup + styles + client script for Worker-built pages (fresh rides).
  */
 export function kindRemarksStripHtml() {
@@ -296,7 +569,11 @@ export function kindRemarksStripHtml() {
   <div class="site-shell kind-inner">
     <div class="kind-panel" data-kind-panel>
       <h2 class="kind-title">Kind words</h2>
-      <p class="kind-lead">This is a positive site. Leave a short, kind remark for this page.</p>
+      <p class="kind-lead">${POSITIVE_LEAD}</p>
+      <div class="kind-awesome-row">
+        <button type="button" class="kind-awesome-btn" data-kind-awesome>${AWESOME_LABEL}</button>
+        <span class="kind-awesome-count" data-kind-awesome-count hidden></span>
+      </div>
       <ul class="kind-list" data-kind-list hidden></ul>
       <p class="kind-empty" data-kind-empty>No kind words here yet. Be the first.</p>
       <p class="kind-status" data-kind-status hidden></p>
@@ -349,6 +626,10 @@ export function kindRemarksStyles() {
 .kind-panel,.kind-member{display:grid;gap:.5rem;align-content:start;min-width:0;padding:.85rem .95rem .95rem;border:1px solid rgba(215,224,232,.14);border-radius:.35rem;background:rgba(8,12,17,.42);box-sizing:border-box}
 .kind-title{margin:0;font-family:var(--font-display),'Sofia Sans Extra Condensed','Arial Narrow',sans-serif;font-size:.98rem;color:var(--paper,#eef3f7);font-weight:400}
 .kind-lead,.kind-empty,.kind-status{margin:0;color:rgba(215,224,232,.58);font-size:.8rem;line-height:1.4}
+.kind-awesome-row{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+.kind-awesome-btn{border:0;border-radius:.35rem;padding:.4rem .75rem;background:#d4a574;color:#0c1218;font-weight:600;font-size:.8rem;cursor:pointer}
+.kind-awesome-btn:disabled{opacity:.65;cursor:default}
+.kind-awesome-count{color:rgba(215,224,232,.72);font-size:.78rem}
 .kind-list{list-style:none;margin:0;padding:0;display:grid;gap:.4rem;align-content:start}
 .kind-list li{margin:0;padding:0;color:rgba(238,243,247,.82);font-size:.82rem;line-height:1.4}
 .kind-list .who{display:inline;margin-left:.35rem;color:rgba(215,224,232,.45);font-size:.74rem}
@@ -377,6 +658,9 @@ export function kindRemarksClientScript() {
   var empty = root.querySelector('[data-kind-empty]');
   var status = root.querySelector('[data-kind-status]');
   var form = root.querySelector('[data-kind-form]');
+  var awesomeBtn = root.querySelector('[data-kind-awesome]');
+  var awesomeCount = root.querySelector('[data-kind-awesome-count]');
+  var awesomeStoreKey = 'ss-awesome:' + path;
 
   function showStatus(text, tone) {
     if (!status) return;
@@ -411,10 +695,77 @@ export function kindRemarksClientScript() {
     });
   }
 
+  function paintAwesome(n) {
+    var count = Number(n) || 0;
+    if (!awesomeCount) return;
+    if (count < 1) {
+      awesomeCount.hidden = true;
+      awesomeCount.textContent = '';
+      awesomeCount.removeAttribute('aria-label');
+      return;
+    }
+    awesomeCount.hidden = false;
+    awesomeCount.textContent = '· ' + count;
+    awesomeCount.setAttribute('aria-label', count === 1 ? '1 person' : count + ' people');
+  }
+
+  function alreadyAwesome() {
+    try { return localStorage.getItem(awesomeStoreKey) === '1'; } catch (e) { return false; }
+  }
+
+  function rememberAwesome() {
+    try { localStorage.setItem(awesomeStoreKey, '1'); } catch (e) {}
+    if (awesomeBtn) {
+      awesomeBtn.disabled = true;
+      awesomeBtn.setAttribute('aria-pressed', 'true');
+    }
+  }
+
+  if (alreadyAwesome()) rememberAwesome();
+
   fetch('/api/remarks?path=' + encodeURIComponent(path), { headers: { accept: 'application/json' } })
     .then(function (res) { return res.json(); })
-    .then(function (data) { paint(data && data.remarks ? data.remarks : []); })
+    .then(function (data) {
+      paint(data && data.remarks ? data.remarks : []);
+      paintAwesome(data && data.awesome);
+    })
     .catch(function () {});
+
+  if (awesomeBtn) {
+    awesomeBtn.addEventListener('click', function () {
+      if (awesomeBtn.getAttribute('aria-pressed') === 'true') return;
+      showStatus('', '');
+      awesomeBtn.disabled = true;
+      var hp = form ? form.querySelector('input[name="website"]') : null;
+      fetch('/api/remarks', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({
+          path: path,
+          kind: 'awesome',
+          website: hp ? String(hp.value || '') : '',
+        }),
+      })
+        .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+        .then(function (result) {
+          if (!result.ok || !result.data || !result.data.ok) {
+            if (!alreadyAwesome()) awesomeBtn.disabled = false;
+            showStatus((result.data && result.data.error) || 'Could not save that just now.', 'bad');
+            return;
+          }
+          if (result.data.via === 'discard') {
+            awesomeBtn.disabled = false;
+            return;
+          }
+          rememberAwesome();
+          paintAwesome(result.data.awesome);
+        })
+        .catch(function () {
+          if (!alreadyAwesome()) awesomeBtn.disabled = false;
+          showStatus('Could not save that just now.', 'bad');
+        });
+    });
+  }
 
   if (form) {
     form.addEventListener('submit', function (event) {
@@ -532,7 +883,8 @@ export async function handleRemarksRequest(request, env) {
     const path = normalizeRemarkPath(url.searchParams.get('path') || '/');
     if (!path) return json({ ok: false, error: 'That page cannot take a remark.' }, 400);
     const remarks = await readRemarks(env, path);
-    return json({ ok: true, path, remarks });
+    const awesome = await readAwesome(env, path);
+    return json({ ok: true, path, remarks, awesome });
   }
 
   if (request.method !== 'POST') {
@@ -546,6 +898,24 @@ export async function handleRemarksRequest(request, env) {
   const fields = parseRemarkBody(await readJson(request));
   if (fields.website) {
     return json({ ok: true, via: 'discard' });
+  }
+
+  if (fields.kind === 'awesome') {
+    if (!fields.path) return json({ ok: false, error: 'That page cannot take a remark.' }, 400);
+    try {
+      const awesome = await addAwesome(env, fields.path);
+      return json({ ok: true, awesome });
+    } catch (error) {
+      const code = error && typeof error === 'object' ? error.code : '';
+      if (code === 'E_REMARKS_KV') {
+        return json(
+          { ok: false, error: 'Remarks are not wired on the Worker yet.', code },
+          503,
+        );
+      }
+      console.error('awesome save failed', error);
+      return json({ ok: false, error: 'Could not save that just now.' }, 502);
+    }
   }
 
   const problem = validateRemark(fields);

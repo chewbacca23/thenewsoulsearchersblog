@@ -1,6 +1,48 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import { handleRemarksRequest } from './cloudflare/kind-remarks.js';
+
+/** In-memory /api/remarks for `npm run dev`. Production uses the Worker KV. */
+function remarksDevApi() {
+  /** @type {Record<string, string>} */
+  const store = {};
+  const kv = {
+    async get(key) {
+      return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null;
+    },
+    async put(key, value) {
+      store[key] = String(value);
+    },
+  };
+  return {
+    name: 'remarks-dev-api',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = req.url || '';
+        if (!url.startsWith('/api/remarks')) return next();
+        try {
+          const chunks = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const body = Buffer.concat(chunks);
+          const host = req.headers.host || '127.0.0.1:4321';
+          const request = new Request(`http://${host}${url}`, {
+            method: req.method,
+            headers: { 'content-type': String(req.headers['content-type'] || '') },
+            body: req.method === 'GET' || req.method === 'HEAD' ? undefined : body,
+          });
+          const response = await handleRemarksRequest(request, { STATS: kv });
+          if (!response) return next();
+          res.statusCode = response.status;
+          response.headers.forEach((value, key) => res.setHeader(key, value));
+          res.end(Buffer.from(await response.arrayBuffer()));
+        } catch (error) {
+          next(error);
+        }
+      });
+    },
+  };
+}
 
 // https://astro.build/config
 export default defineConfig({
@@ -38,6 +80,7 @@ export default defineConfig({
     }),
   ],
   vite: {
+    plugins: [remarksDevApi()],
     build: {
       cssMinify: true,
     },
