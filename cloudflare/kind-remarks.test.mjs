@@ -185,8 +185,63 @@ describe('handleRemarksRequest', () => {
       { STATS: kv },
     );
     const listed = await get.json();
+    assert.equal(listed.count, 1);
     assert.equal(listed.remarks.length, 1);
     assert.equal(listed.remarks[0].name, 'Lars');
+
+    const elsewhere = await handleRemarksRequest(
+      new Request('https://thenewsoulsearchers.de/api/remarks?path=/about'),
+      { STATS: kv },
+    );
+    const shared = await elsewhere.json();
+    assert.equal(shared.count, 1);
+    assert.equal(shared.remarks[0].name, 'Lars');
+    assert.equal(shared.awesome, 0);
+  });
+
+  it('folds per-page words into one box with a count', async () => {
+    const kv = memoryKv({
+      'remarks:path:/': JSON.stringify([
+        {
+          id: 'home1',
+          name: 'Ada',
+          message: 'Lovely home page, thank you.',
+          at: '2026-11-01T10:00:00.000Z',
+        },
+      ]),
+      'remarks:path:/about': JSON.stringify([
+        {
+          id: 'about1',
+          name: 'Bea',
+          message: 'Kind words for the about page.',
+          at: '2026-11-02T10:00:00.000Z',
+        },
+      ]),
+    });
+    kv.list = async ({ prefix }) => ({
+      keys: Object.keys(kv._store)
+        .filter((name) => name.startsWith(prefix))
+        .map((name) => ({ name })),
+      list_complete: true,
+    });
+
+    const home = await handleRemarksRequest(
+      new Request('https://thenewsoulsearchers.de/api/remarks?path=/'),
+      { STATS: kv },
+    );
+    const homeData = await home.json();
+    assert.equal(homeData.count, 2);
+    assert.deepEqual(
+      homeData.remarks.map((item) => item.name),
+      ['Bea', 'Ada'],
+    );
+
+    const again = await handleRemarksRequest(
+      new Request('https://thenewsoulsearchers.de/api/remarks?path=/about'),
+      { STATS: kv },
+    );
+    const aboutData = await again.json();
+    assert.equal(aboutData.count, 2);
   });
 
   it('pretends success for a filled honeypot', async () => {

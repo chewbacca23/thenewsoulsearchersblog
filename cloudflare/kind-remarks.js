@@ -4,9 +4,9 @@
  * POST /api/remarks  { path, name?, message, website? }
  * POST /api/remarks  { path, kind: "awesome", website? }
  *
- * Stored in STATS KV. A warm note publishes immediately.
+ * Stored in STATS KV. A warm note publishes immediately into one site-wide box.
  * Hate and lectures are refused and never written. No approve queue.
- * “That’s awesome” is a public count only — Henrik sees the same list.
+ * “That’s awesome” stays a per-page count. Henrik sees the same kind-word list.
  */
 
 export const MAX_NAME = 40;
@@ -438,8 +438,66 @@ function clientKey(request) {
   return `remarks:rate:${ip}:${cf.colo || 'xx'}`;
 }
 
+const ALL_KEY = 'remarks:all';
+const PATH_PREFIX = 'remarks:path:';
+
 function listKey(path) {
-  return `remarks:path:${path}`;
+  return `${PATH_PREFIX}${path}`;
+}
+
+/**
+ * @param {unknown} raw
+ */
+function parseRemarkList(raw) {
+  try {
+    const list = raw ? JSON.parse(String(raw)) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * @param {any} item
+ * @param {string} [fallbackPath]
+ */
+function publicRemark(item, fallbackPath = '') {
+  if (!item || typeof item.message !== 'string') return null;
+  const path = normalizeRemarkPath(item.path || fallbackPath) || '';
+  return {
+    id: String(item.id || ''),
+    name: String(item.name || '').slice(0, MAX_NAME),
+    message: String(item.message || '').slice(0, MAX_MESSAGE),
+    at: String(item.at || ''),
+    path,
+  };
+}
+
+/**
+ * @param {{ id?: string, message?: string, at?: string, path?: string } | null} a
+ * @param {{ id?: string, message?: string, at?: string, path?: string } | null} b
+ */
+function sameRemark(a, b) {
+  if (!a || !b) return false;
+  if (a.id && b.id && a.id === b.id) return true;
+  return a.message === b.message && a.at === b.at && a.path === b.path;
+}
+
+/**
+ * @param {any} kv
+ */
+async function pathListKeys(kv) {
+  if (!kv || typeof kv.list !== 'function') return [];
+  const names = [];
+  let cursor;
+  do {
+    const page = await kv.list({ prefix: PATH_PREFIX, cursor });
+    for (const key of page?.keys || []) {
+      if (key && typeof key.name === 'string') names.push(key.name);
+    }
+    cursor = page && page.list_complete === false ? page.cursor : undefined;
+  } while (cursor);
+  return names;
 }
 
 function awesomeKey(path) {
@@ -470,27 +528,36 @@ async function underRateLimit(env, key) {
 }
 
 /**
+ * One box for the whole site. Older per-page lists are folded in on read.
  * @param {any} env
- * @param {string} path
  */
-export async function readRemarks(env, path) {
+export async function readRemarks(env) {
   const kv = env?.STATS;
-  if (!kv || typeof kv.get !== 'function') return [];
+  if (!kv || typeof kv.get !== 'function') return { remarks: [], count: 0 };
   try {
-    const raw = await kv.get(listKey(path));
-    const list = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(list)) return [];
-    return list
-      .filter((item) => item && typeof item.message === 'string')
-      .slice(0, LIST_LIMIT)
-      .map((item) => ({
-        id: String(item.id || ''),
-        name: String(item.name || '').slice(0, MAX_NAME),
-        message: String(item.message || '').slice(0, MAX_MESSAGE),
-        at: String(item.at || ''),
-      }));
+    const all = parseRemarkList(await kv.get(ALL_KEY))
+      .map((item) => publicRemark(item))
+      .filter(Boolean);
+    let folded = false;
+    for (const key of await pathListKeys(kv)) {
+      const path = key.slice(PATH_PREFIX.length);
+      for (const item of parseRemarkList(await kv.get(key))) {
+        const remark = publicRemark(item, path);
+        if (!remark) continue;
+        if (!remark.id) remark.id = `fold${all.length}${remark.at}`;
+        if (all.some((have) => sameRemark(have, remark))) continue;
+        all.push(remark);
+        folded = true;
+      }
+    }
+    all.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    const stored = all.slice(0, STORE_LIMIT);
+    if (folded && typeof kv.put === 'function') {
+      await kv.put(ALL_KEY, JSON.stringify(stored));
+    }
+    return { remarks: stored.slice(0, LIST_LIMIT), count: stored.length };
   } catch {
-    return [];
+    return { remarks: [], count: 0 };
   }
 }
 
@@ -507,22 +574,25 @@ export async function saveRemark(env, path, fields) {
     err.code = 'E_REMARKS_KV';
     throw err;
   }
+  const { remarks: existing } = await readRemarks(env);
   const entry = {
     id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     name: fields.name,
     message: fields.message,
     at: new Date().toISOString(),
+    path,
   };
   let list = [];
   try {
-    const raw = await kv.get(listKey(path));
-    list = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(list)) list = [];
+    list = parseRemarkList(await kv.get(ALL_KEY))
+      .map((item) => publicRemark(item))
+      .filter(Boolean);
   } catch {
     list = [];
   }
-  list = [entry, ...list].slice(0, STORE_LIMIT);
-  await kv.put(listKey(path), JSON.stringify(list));
+  if (!list.length && existing.length) list = existing;
+  list = [entry, ...list.filter((item) => !sameRemark(item, entry))].slice(0, STORE_LIMIT);
+  await kv.put(ALL_KEY, JSON.stringify(list));
   return entry;
 }
 
@@ -568,8 +638,11 @@ export function kindRemarksStripHtml() {
 <section class="kind-remarks" data-kind-remarks aria-label="Kind words">
   <div class="site-shell kind-inner">
     <div class="kind-panel" data-kind-panel>
-      <h2 class="kind-title">Kind words</h2>
-      <p class="kind-lead">${POSITIVE_LEAD}</p>
+      <div class="kind-head">
+        <h2 class="kind-title">Kind words</h2>
+        <p class="kind-count" data-kind-count>0 kind words</p>
+      </div>
+      <p class="kind-lead">${POSITIVE_LEAD} Every kind word lands in this one box.</p>
       <div class="kind-awesome-row">
         <button type="button" class="kind-awesome-btn" data-kind-awesome>${AWESOME_LABEL}</button>
         <span class="kind-awesome-count" data-kind-awesome-count hidden></span>
@@ -624,7 +697,9 @@ export function kindRemarksStyles() {
 .kind-inner{display:grid;gap:.85rem;align-items:stretch}
 @media (min-width:720px){.kind-inner{grid-template-columns:1fr 1fr;gap:1rem}}
 .kind-panel,.kind-member{display:grid;gap:.5rem;align-content:start;min-width:0;padding:.85rem .95rem .95rem;border:1px solid rgba(215,224,232,.14);border-radius:.35rem;background:rgba(8,12,17,.42);box-sizing:border-box}
+.kind-head{display:flex;align-items:baseline;justify-content:space-between;gap:.75rem}
 .kind-title{margin:0;font-family:var(--font-display),'Sofia Sans Extra Condensed','Arial Narrow',sans-serif;font-size:.98rem;color:var(--paper,#eef3f7);font-weight:400}
+.kind-count{margin:0;color:var(--paper,#eef3f7);font-family:var(--font-display),'Sofia Sans Extra Condensed','Arial Narrow',sans-serif;font-size:.98rem;white-space:nowrap}
 .kind-lead,.kind-empty,.kind-status{margin:0;color:rgba(215,224,232,.58);font-size:.8rem;line-height:1.4}
 .kind-awesome-row{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
 .kind-awesome-btn{border:0;border-radius:.35rem;padding:.4rem .75rem;background:#d4a574;color:#0c1218;font-weight:600;font-size:.8rem;cursor:pointer}
@@ -632,7 +707,7 @@ export function kindRemarksStyles() {
 .kind-awesome-count{color:rgba(215,224,232,.72);font-size:.78rem}
 .kind-list{list-style:none;margin:0;padding:0;display:grid;gap:.4rem;align-content:start}
 .kind-list li{margin:0;padding:0;color:rgba(238,243,247,.82);font-size:.82rem;line-height:1.4}
-.kind-list .who{display:inline;margin-left:.35rem;color:rgba(215,224,232,.45);font-size:.74rem}
+.kind-list .who,.kind-list .where{display:inline;margin-left:.35rem;color:rgba(215,224,232,.45);font-size:.74rem}
 .kind-form{display:grid;gap:.4rem;margin-top:.15rem}
 .kind-form label{display:grid;gap:.2rem;color:rgba(215,224,232,.68);font-size:.74rem}
 .kind-form em{font-style:normal;opacity:.7}
@@ -656,8 +731,16 @@ export function kindRemarksClientScript() {
   if (path.length > 1 && path.charAt(path.length - 1) === '/') path = path.slice(0, -1);
   var list = root.querySelector('[data-kind-list]');
   var empty = root.querySelector('[data-kind-empty]');
+  var wordCount = root.querySelector('[data-kind-count]');
   var status = root.querySelector('[data-kind-status]');
   var form = root.querySelector('[data-kind-form]');
+
+  function pageName(value) {
+    if (!value || value === '/' || value === '/home') return 'Home';
+    var bit = String(value).replace(/^\\//, '').split('/')[0];
+    if (!bit) return 'Home';
+    return bit.charAt(0).toUpperCase() + bit.slice(1);
+  }
   var awesomeBtn = root.querySelector('[data-kind-awesome]');
   var awesomeCount = root.querySelector('[data-kind-awesome-count]');
   var awesomeStoreKey = 'ss-awesome:' + path;
@@ -677,7 +760,9 @@ export function kindRemarksClientScript() {
       .replace(/"/g, '&quot;');
   }
 
-  function paint(items) {
+  function paint(items, total) {
+    var n = typeof total === 'number' ? total : (items && items.length) || 0;
+    if (wordCount) wordCount.textContent = n === 1 ? '1 kind word' : n + ' kind words';
     if (!list || !empty) return;
     list.innerHTML = '';
     if (!items || !items.length) {
@@ -690,9 +775,19 @@ export function kindRemarksClientScript() {
     items.forEach(function (item) {
       var li = document.createElement('li');
       var who = item.name ? '<span class="who">— ' + escapeText(item.name) + '</span>' : '';
-      li.innerHTML = '<span class="said">' + escapeText(item.message) + '</span>' + who;
+      var where = item.path ? '<span class="where">' + escapeText(pageName(item.path)) + '</span>' : '';
+      li.innerHTML = '<span class="said">' + escapeText(item.message) + '</span>' + who + where;
       list.appendChild(li);
     });
+  }
+
+  function loadRemarks() {
+    return fetch('/api/remarks?path=' + encodeURIComponent(path), { headers: { accept: 'application/json' } })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        paint(data && data.remarks ? data.remarks : [], data && typeof data.count === 'number' ? data.count : undefined);
+        paintAwesome(data && data.awesome);
+      });
   }
 
   function paintAwesome(n) {
@@ -723,13 +818,7 @@ export function kindRemarksClientScript() {
 
   if (alreadyAwesome()) rememberAwesome();
 
-  fetch('/api/remarks?path=' + encodeURIComponent(path), { headers: { accept: 'application/json' } })
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
-      paint(data && data.remarks ? data.remarks : []);
-      paintAwesome(data && data.awesome);
-    })
-    .catch(function () {});
+  loadRemarks().catch(function () {});
 
   if (awesomeBtn) {
     awesomeBtn.addEventListener('click', function () {
@@ -792,10 +881,8 @@ export function kindRemarksClientScript() {
             return;
           }
           form.reset();
-          showStatus('Thank you. Your kind word is on the page.', 'ok');
-          return fetch('/api/remarks?path=' + encodeURIComponent(path), { headers: { accept: 'application/json' } })
-            .then(function (res) { return res.json(); })
-            .then(function (data) { paint(data && data.remarks ? data.remarks : []); });
+          showStatus('Thank you. Your kind word is in the box.', 'ok');
+          return loadRemarks();
         })
         .catch(function () { showStatus('Could not save that just now.', 'bad'); })
         .finally(function () { if (button) button.disabled = false; });
@@ -882,9 +969,9 @@ export async function handleRemarksRequest(request, env) {
   if (request.method === 'GET') {
     const path = normalizeRemarkPath(url.searchParams.get('path') || '/');
     if (!path) return json({ ok: false, error: 'That page cannot take a remark.' }, 400);
-    const remarks = await readRemarks(env, path);
+    const { remarks, count } = await readRemarks(env);
     const awesome = await readAwesome(env, path);
-    return json({ ok: true, path, remarks, awesome });
+    return json({ ok: true, path, remarks, count, awesome });
   }
 
   if (request.method !== 'POST') {

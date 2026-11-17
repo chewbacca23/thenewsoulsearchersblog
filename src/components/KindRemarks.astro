@@ -21,8 +21,11 @@ const skip =
     <section class="kind-remarks" data-kind-remarks data-path={normalized} aria-label="Kind words">
       <div class="site-shell kind-inner">
         <div class="kind-panel" data-kind-panel>
-          <h2 class="kind-title">Kind words</h2>
-          <p class="kind-lead">{POSITIVE_LEAD}</p>
+          <div class="kind-head">
+            <h2 class="kind-title">Kind words</h2>
+            <p class="kind-count" data-kind-count>0 kind words</p>
+          </div>
+          <p class="kind-lead">{POSITIVE_LEAD} Every kind word lands in this one box.</p>
           <div class="kind-awesome-row">
             <button class="btn btn-primary kind-awesome-btn" type="button" data-kind-awesome>
               {AWESOME_LABEL}
@@ -93,8 +96,16 @@ const skip =
         if (path.length > 1 && path.charAt(path.length - 1) === '/') path = path.slice(0, -1);
         var list = root.querySelector('[data-kind-list]');
         var empty = root.querySelector('[data-kind-empty]');
+        var wordCount = root.querySelector('[data-kind-count]');
         var status = root.querySelector('[data-kind-status]');
         var form = root.querySelector('[data-kind-form]');
+
+        function pageName(value) {
+          if (!value || value === '/' || value === '/home') return 'Home';
+          var bit = String(value).replace(/^\//, '').split('/')[0];
+          if (!bit) return 'Home';
+          return bit.charAt(0).toUpperCase() + bit.slice(1);
+        }
         var awesomeBtn = root.querySelector('[data-kind-awesome]');
         var awesomeCount = root.querySelector('[data-kind-awesome-count]');
         var awesomeStoreKey = 'ss-awesome:' + path;
@@ -114,7 +125,9 @@ const skip =
             .replace(/"/g, '&quot;');
         }
 
-        function paint(items) {
+        function paint(items, total) {
+          var n = typeof total === 'number' ? total : (items && items.length) || 0;
+          if (wordCount) wordCount.textContent = n === 1 ? '1 kind word' : n + ' kind words';
           if (!list || !empty) return;
           list.innerHTML = '';
           if (!items || !items.length) {
@@ -127,9 +140,28 @@ const skip =
           items.forEach(function (item) {
             var li = document.createElement('li');
             var who = item.name ? '<span class="who">· ' + escapeText(item.name) + '</span>' : '';
-            li.innerHTML = '<span class="said">' + escapeText(item.message) + '</span>' + who;
+            var where = item.path
+              ? '<span class="where">' + escapeText(pageName(item.path)) + '</span>'
+              : '';
+            li.innerHTML = '<span class="said">' + escapeText(item.message) + '</span>' + who + where;
             list.appendChild(li);
           });
+        }
+
+        function loadRemarks() {
+          return fetch('/api/remarks?path=' + encodeURIComponent(path), {
+            headers: { accept: 'application/json' },
+          })
+            .then(function (res) {
+              return res.json();
+            })
+            .then(function (data) {
+              paint(
+                data && data.remarks ? data.remarks : [],
+                data && typeof data.count === 'number' ? data.count : undefined,
+              );
+              paintAwesome(data && data.awesome);
+            });
         }
 
         function paintAwesome(n) {
@@ -166,17 +198,7 @@ const skip =
 
         if (alreadyAwesome()) rememberAwesome();
 
-        fetch('/api/remarks?path=' + encodeURIComponent(path), {
-          headers: { accept: 'application/json' },
-        })
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (data) {
-            paint(data && data.remarks ? data.remarks : []);
-            paintAwesome(data && data.awesome);
-          })
-          .catch(function () {});
+        loadRemarks().catch(function () {});
 
         if (awesomeBtn) {
           awesomeBtn.addEventListener('click', function () {
@@ -253,16 +275,8 @@ const skip =
                   return;
                 }
                 form.reset();
-                showStatus('Thank you. Your kind word is on the page.', 'ok');
-                return fetch('/api/remarks?path=' + encodeURIComponent(path), {
-                  headers: { accept: 'application/json' },
-                })
-                  .then(function (res) {
-                    return res.json();
-                  })
-                  .then(function (data) {
-                    paint(data && data.remarks ? data.remarks : []);
-                  });
+                showStatus('Thank you. Your kind word is in the box.', 'ok');
+                return loadRemarks();
               })
               .catch(function () {
                 showStatus('Could not save that just now.', 'bad');
@@ -365,12 +379,27 @@ const skip =
     box-sizing: border-box;
   }
 
+  .kind-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
   .kind-title {
     margin: 0;
     font-family: var(--font-display);
     font-size: 0.98rem;
     font-weight: 500;
     color: var(--paper);
+  }
+
+  .kind-count {
+    margin: 0;
+    color: var(--paper);
+    font-family: var(--font-display);
+    font-size: 0.98rem;
+    white-space: nowrap;
   }
 
   .kind-lead,
@@ -420,7 +449,8 @@ const skip =
     line-height: 1.4;
   }
 
-  .kind-list :global(.who) {
+  .kind-list :global(.who),
+  .kind-list :global(.where) {
     display: inline;
     margin-left: 0.35rem;
     color: rgba(215, 224, 232, 0.45);
