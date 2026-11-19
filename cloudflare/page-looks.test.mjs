@@ -28,7 +28,6 @@ import {
   recentDayBars,
   recentMonthBars,
   recentWeekBars,
-  isLikelyBot,
   shouldCountDocument,
   shouldRecordPath,
   summarizeLooks,
@@ -540,22 +539,14 @@ describe('shouldCountDocument', () => {
     );
   });
 
-  it('skips crawlers and empty user-agents', () => {
-    assert.equal(isLikelyBot('Mozilla/5.0 (compatible; Googlebot/2.1)'), true);
-    assert.equal(isLikelyBot('GPTBot/1.0'), true);
-    assert.equal(isLikelyBot('curl/8.0'), true);
-    assert.equal(isLikelyBot(''), true);
-    assert.equal(
-      isLikelyBot('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'),
-      false,
-    );
+  it('counts a crawler page open the old way', () => {
     assert.equal(
       shouldCountDocument(
         new Request('https://thenewsoulsearchers.de/', {
           headers: { 'user-agent': 'Mozilla/5.0 (compatible; bingbot/2.0)' },
         }),
       ),
-      false,
+      true,
     );
     assert.equal(
       shouldCountDocument(
@@ -563,7 +554,7 @@ describe('shouldCountDocument', () => {
           headers: { 'cf-verified-bot': 'true', 'user-agent': 'NiceBot' },
         }),
       ),
-      false,
+      true,
     );
   });
 });

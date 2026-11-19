@@ -723,8 +723,8 @@ export function shouldFillLooks(pathname) {
 }
 
 /**
- * Soft filter so Looks leans toward people, not crawlers.
- * Misses clever scrapers; catches the usual search / social / AI bots.
+ * Recognises a crawler user-agent. Not used by the counter right now —
+ * Looks is back to counting every page open.
  * @param {string} userAgent
  */
 export function isLikelyBot(userAgent) {
@@ -758,10 +758,6 @@ export function shouldCountDocument(request) {
   if (dest && dest !== 'document' && dest !== 'empty') return false;
   const path = new URL(request.url).pathname;
   if (/\.[a-z0-9]{1,8}$/i.test(path)) return false;
-  // Cloudflare verified bots (when the header is present).
-  const verified = (request.headers.get('cf-verified-bot') || '').toLowerCase();
-  if (verified === 'true' || verified === '1') return false;
-  if (isLikelyBot(request.headers.get('user-agent') || '')) return false;
   return true;
 }
 
